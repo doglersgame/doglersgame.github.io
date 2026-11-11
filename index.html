@@ -1165,7 +1165,7 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
       <section id="tab-shop" hidden>
         <div class="card codeCard" id="codeCard">
           <div class="cardHead"><span class="lbl">Lös in kod</span><span class="small">Koder ger paket och belöningar · varje kod funkar en gång</span></div>
-          <form id="codeForm" class="row"><input type="text" id="codeIn" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Skriv koden här"><button class="btn2" id="codeBtn" type="submit">Lös in</button></form>
+          <form id="codeForm" class="row"><input type="text" id="codeIn" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Skriv koden här"><button class="btn2" id="codeBtn" type="submit">Lös in</button></form>
           <div class="msg" id="codeMsg"></div>
         </div>
         <div class="cardHead"><span class="lbl">Paket · öppna och få ett slumpat skin</span><span class="small">Exklusiva skins finns bara i paket</span></div>
@@ -6152,7 +6152,7 @@ const fmtKr=n=>(n|0).toLocaleString('sv-SE')+' kr';
 // koderna sparas som hash så att de inte står i klartext i källkoden; en kod funkar en gång per spelare
 function codeHash(s){let h1=0xdeadbeef^7,h2=0x41c6ce57^7;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677);}
   h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+(h1>>>0)).toString(36);}
-const CODES={'2115h2dwfdp':{id:'nova3',packs:{nova:3}},'219yyc0g49p':{id:'astra',packs:Object.fromEntries(PACKS.map(p=>[p.id,1]))},'5qh5it8u6k':{id:'dronar6',packs:{dronar:1}},'1fl1fe4nzlg':{id:'dronar6',packs:{dronar:1}}};
+const CODES={'1joygemcejo':{id:'allt',all:true},'2115h2dwfdp':{id:'nova3',packs:{nova:3}},'219yyc0g49p':{id:'astra',packs:Object.fromEntries(PACKS.map(p=>[p.id,1]))},'5qh5it8u6k':{id:'dronar6',packs:{dronar:1}},'1fl1fe4nzlg':{id:'dronar6',packs:{dronar:1}}};
 const packInvOf=id=>Math.max(0,(profile.packInv&&profile.packInv[id])|0);
 function givePacks(map){if(!profile.packInv||typeof profile.packInv!=='object')profile.packInv={};for(const k in map)profile.packInv[k]=packInvOf(k)+(map[k]|0);}
 function packListText(map){return Object.keys(map).map(k=>{const P0=PACKS.find(q=>q.id===k);const n=map[k]|0;return n+' × '+(P0?L(P0.name,trW(P0.name)):k);}).join(', ');}
@@ -6161,7 +6161,7 @@ function redeemCode(raw){const c=String(raw||'').trim().toLowerCase().replace(/\
   const def=CODES[codeHash(c)];if(!def)return{err:L('Den koden finns inte. Kolla stavningen.','That code does not exist. Check the spelling.')};
   if(!Array.isArray(profile.codes))profile.codes=[];
   if(profile.codes.includes(def.id))return{err:L('Du har redan använt den här koden. Varje kod funkar bara en gång.','You have already used this code. Each code only works once.')};
-  profile.codes.push(def.id);if(def.packs)givePacks(def.packs);if(def.money)profile.money=(profile.money|0)+def.money;saveProfile();
+  profile.codes.push(def.id);if(def.all){const add=(arr,ids)=>{for(const i of ids)if(!arr.includes(i))arr.push(i);};add(profile.owned,SKINS.map(s=>s.id));add(profile.guns,Object.keys(GUNS));add(profile.sights,OPT.map(o=>o.id));add(profile.attOwned,ATT_SKINS.map(a=>a.id));saveProfile();try{applySights();}catch(e){}return{ok:L('Koden är inlöst! Du har nu alla skins, alla vapen, alla sikten och alla tillbehörsfärger.','Code redeemed! You now have every skin, every weapon, every sight and every attachment colour.'),def};}if(def.packs)givePacks(def.packs);if(def.money)profile.money=(profile.money|0)+def.money;saveProfile();
   return{ok:L('Koden är inlöst! Du fick ','Code redeemed! You got ')+packListText(def.packs||{})+L('. Öppna dem gratis under Paket.','. Open them for free under Packs.'),def};}
 function wireCodes(){const f=$('codeForm');if(!f||f.dataset.on)return;f.dataset.on='1';
   f.addEventListener('submit',e=>{e.preventDefault();initAudio();const m=$('codeMsg'),r=redeemCode($('codeIn').value);
