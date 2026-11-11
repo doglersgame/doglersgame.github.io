@@ -1,9 +1,15 @@
-# Doglers
+# 🐶 Doglers – spela här: **[doglersgame.github.io](https://doglersgame.github.io)**
 
-A 3D shooter in the browser where you play as a dachshund. Two teams fight over a golden toilet in the middle of the house: carry it home or wipe out the enemy team. Almost every wall can be shot to pieces.
+## ▶️ [KLICKA HÄR FÖR ATT SPELA](https://doglersgame.github.io)
 
-The whole game is a single HTML file (HTML, CSS, JavaScript and three.js).
+[![Spela Doglers](preview.jpg)](https://doglersgame.github.io)
 
-**Play:** go to the GitHub Pages link for this repository, or open `index.html` in a browser.
+Doglers är ett gratis 3D-skjutspel i webbläsaren där du spelar som en tax. Två lag slåss om en guldpotta mitt i huset: bär hem den till er zon eller slå ut hela motståndarlaget. Nästan alla väggar går att skjuta sönder. Inget att ladda ner.
 
-Single player and bot matches work everywhere. **Multiplayer:** create an account with a username, email and password (Firebase). Then add friends by username, invite them to your party and play together. Your money, skins and weapons are saved to your account.
+**TikTok:** [@poopy.studiogames](https://www.tiktok.com/@poopy.studiogames)
+
+---
+
+*Free 3D dachshund shooter in your browser. **[Play now: doglersgame.github.io](https://doglersgame.github.io)***
+
+<sub>Det här är spelets källkod. Själva spelet spelar du på länken ovan.</sub>

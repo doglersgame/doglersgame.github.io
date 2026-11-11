@@ -4,6 +4,7 @@
 <meta name="description" content="Doglers är ett gratis 3D-skjutspel i webbläsaren där du spelar som en tax. Ta guldpottan eller utplåna fiendelaget – spela mot bottar eller med kompisar. Inget att ladda ner.">
 <meta name="keywords" content="Doglers, Doglers game, doglersgame, Dogglers, taxspel, hundspel, shooter, FPS, webbläsarspel, gratis spel, multiplayer, guldpottan">
 <meta name="robots" content="index,follow">
+<link rel="me" href="https://www.tiktok.com/@poopy.studiogames">
 <link rel="canonical" href="https://doglersgame.github.io/">
 <link rel="icon" type="image/png" href="icon.png"><link rel="apple-touch-icon" href="icon.png">
 <meta name="theme-color" content="#1a0f0a">
@@ -11,7 +12,7 @@
 <meta property="og:title" content="Doglers – gratis 3D-shooter med taxar"><meta property="og:description" content="Doglers är ett gratis 3D-skjutspel i webbläsaren där du spelar som en tax. Ta guldpottan eller utplåna fiendelaget – spela mot bottar eller med kompisar. Inget att ladda ner.">
 <meta property="og:image" content="https://doglersgame.github.io/preview.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Doglers – gratis 3D-shooter med taxar"><meta name="twitter:description" content="Doglers är ett gratis 3D-skjutspel i webbläsaren där du spelar som en tax. Ta guldpottan eller utplåna fiendelaget – spela mot bottar eller med kompisar. Inget att ladda ner."><meta name="twitter:image" content="https://doglersgame.github.io/preview.jpg">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Doglers","alternateName":["Doglers Game","doglersgame"],"url":"https://doglersgame.github.io/","image":"https://doglersgame.github.io/preview.jpg","description":"Doglers är ett gratis 3D-skjutspel i webbläsaren där du spelar som en tax. Ta guldpottan eller utplåna fiendelaget – spela mot bottar eller med kompisar. Inget att ladda ner.","genre":["Shooter","FPS","Multiplayer"],"gamePlatform":"Web browser","applicationCategory":"Game","operatingSystem":"Any","inLanguage":["sv","en"],"offers":{"@type":"Offer","price":"0","priceCurrency":"SEK"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Doglers","alternateName":["Doglers Game","doglersgame"],"sameAs":["https://www.tiktok.com/@poopy.studiogames"],"url":"https://doglersgame.github.io/","image":"https://doglersgame.github.io/preview.jpg","description":"Doglers är ett gratis 3D-skjutspel i webbläsaren där du spelar som en tax. Ta guldpottan eller utplåna fiendelaget – spela mot bottar eller med kompisar. Inget att ladda ner.","genre":["Shooter","FPS","Multiplayer"],"gamePlatform":"Web browser","applicationCategory":"Game","operatingSystem":"Any","inLanguage":["sv","en"],"offers":{"@type":"Offer","price":"0","priceCurrency":"SEK"}}</script>
 </head><body>
 <noscript><h1>Doglers (Doglers Game)</h1><p>Doglers är ett gratis 3D-skjutspel i webbläsaren där du spelar som en tax. Ta guldpottan eller utplåna fiendelaget – spela mot bottar eller med kompisar. Inget att ladda ner.</p></noscript>
 <title>Doglers</title>
@@ -1116,11 +1117,13 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
     </div>
   </div>
 
+<style>.ttLink{display:inline-flex;width:max-content;max-width:100%;align-self:flex-start;align-items:center;gap:8px;margin:2px 0 14px;padding:7px 14px 7px 11px;border-radius:999px;background:rgba(0,0,0,.35);border:1px solid rgba(255,182,72,.45);color:var(--fg,#fff);text-decoration:none;font:700 14px Barlow,Arial,sans-serif;transition:background .15s,border-color .15s}.ttLink svg{color:#ffb648}.ttLink b{color:#ffb648;font-weight:800}.ttLink:hover{background:rgba(255,182,72,.16);border-color:#ffb648}.ttLink:focus-visible{outline:2px solid #ffb648;outline-offset:2px}</style>
   <div id="menu" class="overlay" hidden>
     <div class="brief">
       <div class="who"><span class="lbl">Spelare</span><b id="meName">–</b><span class="wallet" id="wallet">0 kr</span><button class="link" id="renameBtn" type="button">Byt namn</button><button class="link langBtn" type="button">English</button></div>
       <h1>DOG<br><span>LERS</span></h1>
       <p>Två lag. En guldpotta mitt i huset. Bär hem den till er zon eller slå ut hela motståndarlaget. Nästan alla väggar går att skjuta och spränga sönder.</p>
+      <a class="ttLink" href="https://www.tiktok.com/@poopy.studiogames" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="17" cy="16" r="3" fill="currentColor"/></svg><span>Följ Doglers på TikTok</span><b>@poopy.studiogames</b></a>
       <nav class="tabs" id="tabs">
         <button type="button" data-tab="play" class="on">Spela</button>
         <button type="button" data-tab="quests">Uppdrag<i id="qBadge" hidden>0</i></button>
@@ -3900,6 +3903,7 @@ const shellRedMat=std({color:C(0x9b1d1d),roughness:.6});
 // ---- geometri för vapen (sparas och återanvänds) ----
 const zCyl=(r0,r1,len,seg)=>gch('zc'+[r0,r1,len,seg],()=>new THREE.CylinderGeometry(r0,r1,len,seg||18).rotateX(PI/2));
 const xCyl=(r0,r1,len,seg)=>gch('xc'+[r0,r1,len,seg],()=>new THREE.CylinderGeometry(r0,r1,len,seg||14).rotateZ(PI/2));
+const zTube=(ri,ro,len,seg)=>zLat('tb'+[ri,ro,len],[[ri,0],[ro,0],[ro,len],[ri,len],[ri,0]],seg||24);
 const zLat=(k,pts,seg)=>gch('zl'+k,()=>new THREE.LatheGeometry(pts.map(p=>new THREE.Vector2(p[0],p[1])),seg||20).rotateX(-PI/2));
 // sidoprofil [z,y] som extruderas till en tjocklek längs x, med rundade kanter
 function prof(k,pts,th,bev){return gch('pf'+k+'_'+th,()=>{const s=new THREE.Shape();pts.forEach((p,i)=>i?s.lineTo(p[0],p[1]):s.moveTo(p[0],p[1]));s.closePath();
@@ -5953,7 +5957,7 @@ const RETT={};function retTex(type){return RETT[type]||(RETT[type]=canvasTex(256
 // modeller: optisk axel i y=0 längs -z, fästet når ned till skenan (y = -0.03)
 function optHouse(o,om){const g=new THREE.Group(),B=[],k='m',P=(geo,x,y,z,rx,ry,rz,key)=>B.push(pt(key||k,geo,x,y,z,rx,ry,rz));let retZ=-.01,rsz=.05,glass=null,gz=-.012,gr=.02;
   const mount=(L,z)=>{P(rboxGeo(.03,.008,L,.0025),0,-.026,z);P(rboxGeo(.036,.006,.012,.002),0,-.022,z-L*.3,0,0,0,'b');P(rboxGeo(.036,.006,.012,.002),0,-.022,z+L*.3,0,0,0,'b');};
-  if(o.house==='tube'){mount(.06,0);P(zCyl(.0155,.0155,.07,24),0,0,0);P(zLat('optH1',[[.0156,0],[.0185,.004],[.0185,.026],[.0172,.028]],24),0,0,-.035);P(zCyl(.0168,.0168,.008,24),0,0,.034,0,0,0,'d');
+  if(o.house==='tube'){mount(.06,0);P(zTube(.0138,.0155,.07,24),0,0,.035);P(zLat('optH1',[[.0156,0],[.0185,.004],[.0185,.026],[.0172,.028]],24),0,0,-.035);P(zTube(.0138,.0168,.008,24),0,0,.038,0,0,0,'d');
     P(rboxGeo(.022,.016,.034,.004),0,-.018,0);P(zCyl(.0062,.0062,.01,16),0,.019,.004,PI/2,0,0);P(zCyl(.0062,.0062,.01,16),.019,0,.004,0,0,PI/2);P(zCyl(.0068,.0068,.003,16),0,.0245,.004,PI/2,0,0,'b');P(zCyl(.0068,.0068,.003,16),.0245,0,.004,0,0,PI/2,'b');
     retZ=-.02;rsz=.06;gz=-.06;gr=.0165;}
   else if(o.house==='reflex'){mount(.05,.005);P(rboxGeo(.032,.012,.05,.004),0,-.018,.005);P(rboxGeo(.005,.036,.008,.002),-.016,0,-.016,-.12);P(rboxGeo(.005,.036,.008,.002),.016,0,-.016,-.12);P(rboxGeo(.037,.006,.01,.002),0,.019,-.018,-.12);
@@ -7926,7 +7930,7 @@ if(!profile.gfxAuto){profile.gfxAuto=1;try{const gl=renderer.getContext(),dbg=gl
 if(profile.langV!==1){profile.lang='en';profile.langV=1;try{saveProfile();}catch(e){}}
 let LANG=profile.lang==='sv'?'sv':'en';
 const GT='GT (Gold Toilet)',GTU='GT (GOLD TOILET)';
-const EN={
+const EN={'Följ Doglers på TikTok':'Follow Doglers on TikTok',
  'Uppdrag':'Quests',
  'Gubbar':'Characters','Utseende':'Look','Taxen':'Dachshund','Soldater':'Soldiers','Klassiska soldater':'Classic soldiers','Taxen eller de klassiska soldaterna. Lobbyn byts direkt, matcher från nästa match':'The Dachshund or the classic soldiers. The lobby changes right away, matches from the next match',
  'Våta ytor':'Wet surfaces','Pölar och blanka, fuktiga golv på Slottet och i Hamnen':'Puddles and glossy damp floors at the Castle and the Harbour','Ficklampa':'Flashlight','Nattfärg':'Night colour','I svagt ljus drar färgerna åt kallt blått som i månsken, facklor och ficklampa behåller sin värme · Slottet':'In dim light colours shift towards cool moonlit blue, torches and the flashlight keep their warmth · the Castle','Ljuskägla i luften':'Light beam in the air','Strålen syns i dammig luft och mörker · Effektkvalitet Medel och Hög':'The beam shows in dusty air and darkness · Effects quality Medium and High','Damm i ljuset':'Dust in the light','Små korn som glittrar när de hamnar i strålen':'Tiny specks that glitter when they drift into the beam','Studsljus':'Bounce light','Ytan du lyser på sprider ljuset vidare ut i rummet':'The surface you light up spreads the light into the room','Mjuk följning':'Smooth follow','Ljuset släpar en aning efter när du vänder dig, som en riktig lampa i handen':'The light trails slightly when you turn, like a real hand-held light','Upplösning och mjukhet på skuggorna · ficklampan kastar skuggor från Medel · Ultra: mjuka kontaktskuggor':'Resolution and softness of shadows · the flashlight casts shadows from Medium · Ultra: soft contact shadows',
