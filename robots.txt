@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://doglersgame.github.io/sitemap.xml
