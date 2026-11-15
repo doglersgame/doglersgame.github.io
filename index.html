@@ -1148,7 +1148,7 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
     if(!S.on){S.on=true;requestAnimationFrame(tick);}}
   function finish(){if(S.on&&!S.done){S.done=1;S.doneT=performance.now();}}
   function tick(){if(!S.on)return;const now=performance.now(),t=(now-S.T0)/1000;
-    if(S.boot&&!S.done){const b=document.getElementById('bootScr');if((b&&b.hidden)||vis('fbLog')||vis('menu')||vis('nameScr')||t>90)finish();}
+    if(S.boot&&!S.done){const b=document.getElementById('bootScr');if(((b&&b.hidden)||vis('fbLog')||vis('menu')||vis('nameScr'))&&!window.__warmBusy||t>90)finish();}
     // jämn takt: procenten räknas upp en i taget; hunden växer en liten bit för varje procent
     let p=Math.min(.95,t/S.EST);if(window.__warmBusy&&!S.done)p=Math.min(p,.12+.83*(+window.__warmK||0));
     if(S.done){if(!S.doneP){S.doneP=Math.max(p,S.pc/100);if(S.boot){try{localStorage.setItem('doglers.loadT',String(Math.round(t*10)/10));}catch(e){}}}
@@ -8019,7 +8019,7 @@ function lstabVis(o){let p=o,top=o;for(;p;p=p.parent){if(!p.visible)return false
 function lstab(){
   if(--LSTAB.t<=0){LSTAB.t=20;LSTAB.pts=[];LSTAB.spots=[];scene.traverse(o=>{if(o.userData.lsDummy)return;if(o.isPointLight)LSTAB.pts.push(o);else if(o.isSpotLight)LSTAB.spots.push(o);});}
   let cP=0,cS=0;for(const l of LSTAB.pts)if(lstabVis(l))cP++;for(const l of LSTAB.spots)if(lstabVis(l))cS++;
-  if(LSTAB.maxP<0){LSTAB.maxP=cP+2;LSTAB.maxS=cS+1;}if(cP>LSTAB.maxP)LSTAB.maxP=cP;if(cS>LSTAB.maxS)LSTAB.maxS=cS;
+  if(LSTAB.maxP<0){LSTAB.maxP=Math.max(cP+2,(LPOOL?LPOOL.length:0)+6);LSTAB.maxS=Math.max(cS+1,3);}if(cP>LSTAB.maxP)LSTAB.maxP=cP;if(cS>LSTAB.maxS)LSTAB.maxS=cS;
   const fill=(arr,need,mk)=>{while(arr.length<need){const d=mk();d.userData.lsDummy=1;d.intensity=0;d.position.set(0,-900,0);d.castShadow=false;scene.add(d);if(d.target){d.target.position.set(0,-901,0);scene.add(d.target);}arr.push(d);}
     for(let i=0;i<arr.length;i++)arr[i].visible=i<need;};
   fill(LSTAB.dP,LSTAB.maxP-cP,()=>new THREE.PointLight(0x000000,0,.01,2));
@@ -8074,41 +8074,49 @@ function bb(tag){if(!BB.w||(tag==='idle'&&BB.tag==='idle'))return;BB.tag=tag;try
    Grafikkortet bygger sina shaders först när något faktiskt ritas. Förut hände det mitt i matchen, första gången man tittade åt ett nytt håll,
    och då stod bilden still. Nu ritas allt på banan en gång direkt efter att den laddats (i en pytteliten ruta, portion för portion),
    så att laddningsskärmen fortsätter röra sig och inget behöver byggas när man väl spelar. */
-var WARM={req:false,on:false,list:null,mask:null,hid:null,cul:null,i:0,n:6,t0:0,ms:0,maxLoad:12000,nB:0};
-try{Object.defineProperty(window,'__warmBusy',{configurable:true,get:()=>(WARM.on&&performance.now()-WARM.t0<WARM.maxLoad)||(WARM.req&&state==='game'&&G.map===curMap)});}catch(e){}
+var WARM={req:false,on:false,list:null,mask:null,hid:null,cul:null,i:0,n:1,t0:0,ms:0,maxLoad:45000,nB:0,links:0,seen:null,tmp:[],nNew:0};
+try{const gl=renderer.getContext(),ol=gl.linkProgram;gl.linkProgram=function(p){WARM.links++;return ol.call(gl,p);};}catch(e){}
+function warmKey(o){const m=o.material;return(Array.isArray(m)?m.map(x=>x.uuid).join('+'):m.uuid)+(o.isInstancedMesh?'i':'')+(o.isSkinnedMesh?'s':'')+(o.receiveShadow?'r':'');}
+try{Object.defineProperty(window,'__warmBusy',{configurable:true,get:()=>(WARM.on&&performance.now()-WARM.t0<WARM.maxLoad)||(WARM.req&&state==='game'&&G.map===curMap)||(state==='menu'&&typeof LOBBY!=='undefined'&&LOBBY.built&&!LOBBY.warmed&&!/[?&]nowarm/.test(location.search))});}catch(e){}
 // listan byggs en gång per bana: det som syns från början först, sedan det som ligger gömt (effekter, reserver)
-function warmBegin(){
-  WARM.req=false;WARM.on=true;WARM.t0=performance.now();WARM.nB=0;window.__warmK=0;
+function warmBegin(sc,cam){WARM.sc=sc||scene;WARM.cam=cam||camera;const rq0=WARM.req;
+  WARM.req=false;WARM.on=true;WARM.post=0;WARM.t0=performance.now();WARM.nB=0;window.__warmK=0;
   const vis=[],hid=[];
   const walk=(o,h)=>{if(o===vm)return;h=h||!o.visible;if((o.isMesh||o.isPoints||o.isLine||o.isSprite)&&o.material)(h?hid:vis).push(o);for(const c of o.children)walk(c,h);};
-  try{walk(scene,false);}catch(e){}
-  WARM.list=vis.concat(hid);WARM.i=0;WARM.n=6;
+  try{walk(WARM.sc,false);}catch(e){}
+  WARM.list=vis.concat(hid);WARM.i=0;WARM.n=1;WARM.seen=new Set();WARM.nNew=0;if(WARM.sc!==scene)WARM.req=rq0;
 }
+function warmDone(){for(const g of WARM.tmp)if(g.parent)g.parent.remove(g);WARM.tmp.length=0;}
 // en portion: gör allt synligt, rita några föremål i en pytteliten ruta, ställ tillbaka. Inget ligger kvar ändrat mellan portionerna.
 function warmSlice(budget,maxB){
   const L=WARM.list;if(!L){WARM.on=false;return;}
+  if(WARM.post===1){WARM.post=2;bb('warm');try{draw(WARM.sc,WARM.cam);}catch(e){fzErr(e,'warm-slut');}WARM.list=null;WARM.on=false;WARM.ms=Math.round(performance.now()-WARM.t0);window.__warmK=1;warmDone();bb('u');return;}
   const t0=performance.now(),rt=postOn&&composer?composer.readBuffer:null,prev=renderer.getRenderTarget();let sc0=null,nb=0;
   const hid=[],cul=[],masks=new Array(L.length);bb('warm');
   const show=o=>{if(o===vm)return;if(!o.visible){hid.push(o);o.visible=true;}if(o.frustumCulled){cul.push(o);o.frustumCulled=false;}for(const c of o.children)show(c);};
   try{
-    show(scene);for(let k=0;k<L.length;k++){masks[k]=L[k].layers.mask;L[k].layers.mask=2;}
+    show(WARM.sc);for(let k=0;k<L.length;k++){masks[k]=L[k].layers.mask;L[k].layers.mask=2;}
     if(rt){sc0=[rt.scissorTest,rt.scissor.clone()];rt.scissorTest=true;rt.scissor.set(0,0,4,4);}else{renderer.setScissorTest(true);renderer.setScissor(0,0,4,4);}
     while(WARM.i<L.length&&nb<maxB&&(nb===0||performance.now()-t0<budget)){
-      const a=WARM.i,b=Math.min(L.length,a+WARM.n),tb=performance.now();
+      const a=WARM.i,S=WARM.seen;let b=a,nw=0;
+      while(b<L.length&&b-a<400){const k=warmKey(L[b]);if(!S.has(k)){if(nw>=WARM.n)break;nw++;S.add(k);}b++;}
+      if(b===a)b=a+1;const tb=performance.now(),lk0=WARM.links;
       for(let k=a;k<b;k++)L[k].layers.mask=masks[k];
-      renderer.setRenderTarget(rt);renderer.render(scene,camera);
+      renderer.setRenderTarget(rt);renderer.render(WARM.sc,WARM.cam);
       for(let k=a;k<b;k++)L[k].layers.mask=2;
-      WARM.i=b;nb++;WARM.nB++;const d=performance.now()-tb;WARM.n=d>70?Math.max(1,WARM.n>>1):d<14?Math.min(64,WARM.n*2):WARM.n;
+      WARM.i=b;nb++;WARM.nB++;const nl=WARM.links-lk0;WARM.nNew+=nl;WARM.n=nl>0?1:Math.min(6,WARM.n*2);
+      if(nl>0&&performance.now()-t0>budget*.5)break;
     }
-  }catch(e){fzErr(e,'warm');WARM.i=L.length;}
+  }catch(e){fzErr(e,'warm');WARM.i=L.length;warmDone();}
   try{if(rt){if(sc0){rt.scissorTest=sc0[0];rt.scissor.copy(sc0[1]);}}else renderer.setScissorTest(false);renderer.setRenderTarget(prev);}catch(e){}
   for(let k=0;k<L.length;k++)if(masks[k]!==undefined)L[k].layers.mask=masks[k];
   const done=WARM.i>=L.length;
   // sista portionen bakom laddningsskärmen: en hel bild med allt synligt, så att efterbehandlingen och de egna passen också är byggda
-  if(done&&window.dogLoad&&dogLoad.on&&!window.__warmLite){try{draw();}catch(e){fzErr(e,'warm-slut');}}
+  const post=done&&!window.__warmLite&&(WARM.sc!==scene||(window.dogLoad&&dogLoad.on));
   for(const o of hid)o.visible=false;for(const o of cul)o.frustumCulled=true;
   window.__warmK=L.length?WARM.i/L.length:1;
-  if(done){WARM.list=null;WARM.on=false;WARM.ms=Math.round(performance.now()-WARM.t0);window.__warmK=1;}
+  if(post){WARM.post=1;window.__warmK=.99;}
+  else if(done){WARM.list=null;WARM.on=false;WARM.ms=Math.round(performance.now()-WARM.t0);window.__warmK=1;warmDone();}
   bb('u');
 }
 // körs varje bild: bakom laddningsskärmen går uppvärmningen för fullt (högst tolv sekunder), sedan en portion per bild
@@ -8116,6 +8124,8 @@ function warmSlice(budget,maxB){
 function warmTick(now){
   if(WARM.req&&state==='game'&&!loadMap.__q&&G.map===curMap&&(G.ph!=='pick'||pickWon))warmBegin();
   if(!WARM.on)return false;
+  if(WARM.sc&&WARM.sc!==scene){if(state==='menu'||state==='boot'){warmSlice(26,99);return true;}WARM.on=false;WARM.list=null;return false;}
+  if(state==='name'){warmSlice(26,99);return true;}
   const ld=window.dogLoad&&dogLoad.on&&!dogLoad.done;
   if(ld&&performance.now()-WARM.t0<WARM.maxLoad){warmSlice(26,99);return true;}
   // under kart- och vapenvalet täcker menyn hela bilden: då ritas ingen 3D och uppvärmningen får hela bildrutan
@@ -8132,8 +8142,10 @@ function loop(now){
   if(AUTOQ.pend&&state==='game'&&(G.ph!=='live'||!P.alive)&&!(window.dogLoad&&dogLoad.on)){AUTOQ.pend=false;if(window.dogLoad)dogLoad.run(autoQApply,.8);else autoQApply();}
   {const gap=now-last;if(gap>120&&state==='game'&&!paused&&!document.hidden&&!(window.dogLoad&&dogLoad.on))fzNote(gap);else FZ.jsMax=0;}
   const dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;skyMat.uniforms.tm.value=T;if(state!=='game'&&DRN.u>=0)droneStop();
-  if(state==='menu'){bb('idle');updateLobby(dt);renderer.toneMappingExposure=1.12;draw(LOBBY.scene,LOBBY.cam);if(PV.open)pvRender(dt);return;}
+  if(state==='menu'){bb('idle');updateLobby(dt);if(!LOBBY.warmed&&LOBBY.built&&!/[?&]nowarm/.test(location.search)){LOBBY.warmed=1;warmBegin(LOBBY.scene,LOBBY.cam);last=now;return;}renderer.toneMappingExposure=1.12;draw(LOBBY.scene,LOBBY.cam);if(PV.open)pvRender(dt);return;}
   if(state!=='game'){
+    if(state==='boot')return;
+    if(state==='name'&&!WARM.nameW&&!/[?&]nowarm/.test(location.search)){WARM.nameW=1;warmBegin();}if(state==='name'&&WARM.on&&WARM.sc===scene)return;
     orbit+=dt*.06;{const cx=MW()/2,cz=MD()/2,R=Math.max(MW(),MD())*.72;camera.position.set(cx+Math.cos(orbit)*R,13*R/34,cz+Math.sin(orbit)*R);camera.lookAt(cx,1,cz);}
     debris.update(dt);sparks.update(dt);streaks.update(dt);updateSmoke(dt);sky.position.copy(camera.position);updatePotty(T);updateMapFx(dt,T);updatePick();
     draw();return;
@@ -8242,7 +8254,7 @@ async function audioProbe(fn,sec){const save=[AC,master,noiseBuf,revS,revL];cons
   AC=off;master=off.createGain();master.gain.value=.5;master.connect(off.destination);noiseBuf=off.createBuffer(1,off.sampleRate*1.5|0,off.sampleRate);{const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}revS=revL=null;
   try{fn();const buf=await off.startRendering();let pk=0,ss=0,first=-1;const L=buf.getChannelData(0);for(let i=0;i<L.length;i++){const v=Math.abs(L[i]);if(v>pk)pk=v;ss+=v*v;if(first<0&&v>.01)first=i;}return{peak:+pk.toFixed(3),rms:+Math.sqrt(ss/L.length).toFixed(4),start:+(first/44100).toFixed(3)};}
   finally{[AC,master,noiseBuf,revS,revL]=save;}}
-if(/[?&]ilpdebug/.test(location.search))window.__ilp={get FZ(){return FZ;},get WX(){return WX;},wxApply:()=>wxApply(),skyMat,sun,get hemi(){return hemi;},get NET(){return NET;},get LOB(){return LOB;},get PARTY(){return PARTY;},queueBots:()=>queueBots(),setLobby:o=>setLobby(o),isGuest:()=>isGuest(),renderParty:()=>renderParty(),get WARM(){return WARM;},get BB(){return BB;},bb:t=>bb(t),fzErr:(e,a)=>fzErr(e,a),get AUTOQ(){return AUTOQ;},autoQ:f=>autoQ(f),fzText:()=>fzText(),fzNote:g=>fzNote(g),setPerf:v=>setPerf(v),get HB(){return HB;},landDust:(...a)=>landDust(...a),soldierFx:(...a)=>soldierFx(...a),nearMiss:(...a)=>nearMiss(...a),get nmN(){return nmN;},get MAPo(){return MAP;},enterMatch:(a,b,c)=>enterMatch(a,b,c),leaveMatch:()=>leaveMatch(),hurtPlayer:(...a)=>hurtPlayer(...a),buildLevel:()=>buildLevel(),makeBlockMesh:()=>makeBlockMesh(),onRoundStart:()=>onRoundStart(),resetBots:()=>resetBots(),get bMesh(){return bMesh;},get stats(){return stats;},spawnPlayer:()=>spawnPlayer(),clearEffects:()=>clearEffects(),castRay:(...a)=>castRay(...a),rayTarget:(...a)=>rayTarget(...a),audioProbe,wsnd,set locked(v){locked=v;},get dynScale(){return dynScale;},rollSkin,PACKS,SKINS,addMoney,ML,get paused(){return paused;},set paused(v){paused=v;},RIG,CL,VMS,RC,anchors,clipTargets,startReload,cancelReload,switchW,startRack,updateViewModel,updateWeapons,get armL(){return armL;},POTTY_STRAPS,POTTY_BACK,setLang,get LANG(){return LANG;},gunModels,vm,hands,hand2,sfx,BMAT,envTex,goldMat,scene,THREE,loadMap,MAPS,get curMap(){return curMap;},get bots(){return bots;},get rangeT(){return rangeT;},RANGE,BOARD,startChallenge,rangeReset,setRangeMode,setRangeInf,setRangeDist,setRangeDiff,silPart,rayRT,castRay,enemyTargets,updateRange,renderRangeSet,get T(){return T;},collides,los,railCol,RECOIL,get grass(){return grass;},applyAtts,applySkins,OPTM,ATT_SKINS,NOVA,NKIT,KD,novaKits,npSpawn,novaRl,novaFinish,novaInspect,SKFX_S,SKFX_T,normalTex,addRelief,skinTex,renderArsenal,ARS,OPTI,SCOMPAT,optOverlay,aimFovOf,sightOf,openPreview,closePreview,PV,LSHOW,shopOffers,shopLimited,rarDisp,confirm2,slideStart,slideEnd,nv2Chassis,NV2L,NVHC,partMats,kjDraw,COLL,KILLFX,killFx,killFxSkin,killBanner,KFX,WP,kfxUpdate,FLASHT,collFlash,skinTracer,drawEmblem,NSFX,NPS,qEvent,qEnsure,QM,QDAY,QWEEK,QCH,QEVT,SEASON,QBY,renderQuests,claimQ,claimCh,claimEv,claimTier,claimAllTiers,rerollQ,qClaimable,spLvl,onMyKill,hurtBot,switchTab,showEnd,redeemCode,codeHash,packInvOf,givePacks,openPack,renderPacks,handR,hand2,HANDR,HAND2,HPOSE,HFIT2,HFITR,H2Y,HG,FING,placeRig,rigFit,fitHands,poseHands,blendPose,applyHand,poseArr,IMPK,impK,impact,decMesh,decOwn,streaks,TORCH_I,torch,skyMat,INDOOR,get MAPL(){return MAPL;},get LPOOL(){return LPOOL;},pickMapId,renderMapSeg,MATCH,btype,idx,c0,buildSoldier,animSoldier,LOBBY,draw,setupPost,applyShadows,get postQ(){return postQ;},batchStatic,get state(){return state;},renderer,profile,renderShop,GUNS,get W(){return W;},G,P,remotes,NET,PARTY,MATCH,LOB,FR,camera,get isHost(){return isHost;},fire,hurtPlayer,actors,buildCritter,animCritter,charStyle,swapChars,get CRIT_COATS(){return CRIT_COATS;},get CRIT_CR(){return CRIT_CR;},get CRIT2(){return CRIT2;},TORCHU,WETU,torchTick,applyWet,get BEAM(){return BEAM;},get TDUST(){return TDUST;},get tBounce(){return tBounce;},get TL(){return TL;},SPAWN,get P2P(){return P2P;},p2pAttach,p2pDetach,p2pTick,p2pSend,p2pState,effPing,buildPresence,get AUTOQ(){return AUTOQ;},updateRemote,makeRemote,FOGU,applyAtmo,pcssK,get BIRDS(){return BIRDS;},birdsTick,swayMat,openSettings,closeSettings,get SO(){return SO;},gxo,gxSet,postCfg,get GXC(){return GXC;},get composer(){return composer;},get FXK(){return FXK;},kbBuild,get KBA(){return KBA;},get KBM(){return KBM;},padTick,get PAD(){return PAD;},syncSet,setPane,applyUI,applyTexQ,get TQ(){return TQ;},texAni,schedFrame,dmgNum,get DN(){return DN;},baseFov,get musicBus(){return musicBus;},get mainOut(){return mainOut;},sun,torch,get bloomPass(){return bloomPass;},get ssaoPass(){return ssaoPass;},get smaaPass(){return smaaPass;},get fxaaPass(){return fxaaPass;},get gradePass(){return gradePass;},applyPost,shadowsOnly,setLightPool,get isFull(){return isFull;},get keys(){return keys;},qEv:(e,d)=>qEvent(e,d),rollW:P0=>rollSkin(P0),rqW:()=>renderQuests(),get DRN(){return DRN;},droneInspect,droneUpdate,get QDR(){return QDR;},claimDr,claimDrBonus,drTick,gunBoxL,renderQuests,qEvent,COLL,OPT,pistolHouse,get debrisMesh(){return scene.children.find(o=>o.isInstancedMesh&&o.count===900);},applySights,CRK,crkMesh,bhp,cellCenter,breakFx,glassWeb,crackAt,debris,HP,DESTR,smokes,get shake(){return shake;}};
+if(/[?&]ilpdebug/.test(location.search))window.__ilp={get LSTAB(){return LSTAB;},warmKey,get crWarmed(){return crWarm.done;},get FZ(){return FZ;},get WX(){return WX;},wxApply:()=>wxApply(),skyMat,sun,get hemi(){return hemi;},get NET(){return NET;},get LOB(){return LOB;},get PARTY(){return PARTY;},queueBots:()=>queueBots(),setLobby:o=>setLobby(o),isGuest:()=>isGuest(),renderParty:()=>renderParty(),get WARM(){return WARM;},get BB(){return BB;},bb:t=>bb(t),fzErr:(e,a)=>fzErr(e,a),get AUTOQ(){return AUTOQ;},autoQ:f=>autoQ(f),fzText:()=>fzText(),fzNote:g=>fzNote(g),setPerf:v=>setPerf(v),get HB(){return HB;},landDust:(...a)=>landDust(...a),soldierFx:(...a)=>soldierFx(...a),nearMiss:(...a)=>nearMiss(...a),get nmN(){return nmN;},get MAPo(){return MAP;},enterMatch:(a,b,c)=>enterMatch(a,b,c),leaveMatch:()=>leaveMatch(),hurtPlayer:(...a)=>hurtPlayer(...a),buildLevel:()=>buildLevel(),makeBlockMesh:()=>makeBlockMesh(),onRoundStart:()=>onRoundStart(),resetBots:()=>resetBots(),get bMesh(){return bMesh;},get stats(){return stats;},spawnPlayer:()=>spawnPlayer(),clearEffects:()=>clearEffects(),castRay:(...a)=>castRay(...a),rayTarget:(...a)=>rayTarget(...a),audioProbe,wsnd,set locked(v){locked=v;},get dynScale(){return dynScale;},rollSkin,PACKS,SKINS,addMoney,ML,get paused(){return paused;},set paused(v){paused=v;},RIG,CL,VMS,RC,anchors,clipTargets,startReload,cancelReload,switchW,startRack,updateViewModel,updateWeapons,get armL(){return armL;},POTTY_STRAPS,POTTY_BACK,setLang,get LANG(){return LANG;},gunModels,vm,hands,hand2,sfx,BMAT,envTex,goldMat,scene,THREE,loadMap,MAPS,get curMap(){return curMap;},get bots(){return bots;},get rangeT(){return rangeT;},RANGE,BOARD,startChallenge,rangeReset,setRangeMode,setRangeInf,setRangeDist,setRangeDiff,silPart,rayRT,castRay,enemyTargets,updateRange,renderRangeSet,get T(){return T;},collides,los,railCol,RECOIL,get grass(){return grass;},applyAtts,applySkins,OPTM,ATT_SKINS,NOVA,NKIT,KD,novaKits,npSpawn,novaRl,novaFinish,novaInspect,SKFX_S,SKFX_T,normalTex,addRelief,skinTex,renderArsenal,ARS,OPTI,SCOMPAT,optOverlay,aimFovOf,sightOf,openPreview,closePreview,PV,LSHOW,shopOffers,shopLimited,rarDisp,confirm2,slideStart,slideEnd,nv2Chassis,NV2L,NVHC,partMats,kjDraw,COLL,KILLFX,killFx,killFxSkin,killBanner,KFX,WP,kfxUpdate,FLASHT,collFlash,skinTracer,drawEmblem,NSFX,NPS,qEvent,qEnsure,QM,QDAY,QWEEK,QCH,QEVT,SEASON,QBY,renderQuests,claimQ,claimCh,claimEv,claimTier,claimAllTiers,rerollQ,qClaimable,spLvl,onMyKill,hurtBot,switchTab,showEnd,redeemCode,codeHash,packInvOf,givePacks,openPack,renderPacks,handR,hand2,HANDR,HAND2,HPOSE,HFIT2,HFITR,H2Y,HG,FING,placeRig,rigFit,fitHands,poseHands,blendPose,applyHand,poseArr,IMPK,impK,impact,decMesh,decOwn,streaks,TORCH_I,torch,skyMat,INDOOR,get MAPL(){return MAPL;},get LPOOL(){return LPOOL;},pickMapId,renderMapSeg,MATCH,btype,idx,c0,buildSoldier,animSoldier,LOBBY,draw,setupPost,applyShadows,get postQ(){return postQ;},batchStatic,get state(){return state;},renderer,profile,renderShop,GUNS,get W(){return W;},G,P,remotes,NET,PARTY,MATCH,LOB,FR,camera,get isHost(){return isHost;},fire,hurtPlayer,actors,buildCritter,animCritter,charStyle,swapChars,get CRIT_COATS(){return CRIT_COATS;},get CRIT_CR(){return CRIT_CR;},get CRIT2(){return CRIT2;},TORCHU,WETU,torchTick,applyWet,get BEAM(){return BEAM;},get TDUST(){return TDUST;},get tBounce(){return tBounce;},get TL(){return TL;},SPAWN,get P2P(){return P2P;},p2pAttach,p2pDetach,p2pTick,p2pSend,p2pState,effPing,buildPresence,get AUTOQ(){return AUTOQ;},updateRemote,makeRemote,FOGU,applyAtmo,pcssK,get BIRDS(){return BIRDS;},birdsTick,swayMat,openSettings,closeSettings,get SO(){return SO;},gxo,gxSet,postCfg,get GXC(){return GXC;},get composer(){return composer;},get FXK(){return FXK;},kbBuild,get KBA(){return KBA;},get KBM(){return KBM;},padTick,get PAD(){return PAD;},syncSet,setPane,applyUI,applyTexQ,get TQ(){return TQ;},texAni,schedFrame,dmgNum,get DN(){return DN;},baseFov,get musicBus(){return musicBus;},get mainOut(){return mainOut;},sun,torch,get bloomPass(){return bloomPass;},get ssaoPass(){return ssaoPass;},get smaaPass(){return smaaPass;},get fxaaPass(){return fxaaPass;},get gradePass(){return gradePass;},applyPost,shadowsOnly,setLightPool,get isFull(){return isFull;},get keys(){return keys;},qEv:(e,d)=>qEvent(e,d),rollW:P0=>rollSkin(P0),rqW:()=>renderQuests(),get DRN(){return DRN;},droneInspect,droneUpdate,get QDR(){return QDR;},claimDr,claimDrBonus,drTick,gunBoxL,renderQuests,qEvent,COLL,OPT,pistolHouse,get debrisMesh(){return scene.children.find(o=>o.isInstancedMesh&&o.count===900);},applySights,CRK,crkMesh,bhp,cellCenter,breakFx,glassWeb,crackAt,debris,HP,DESTR,smokes,get shake(){return shake;}};
 $('mbTog').addEventListener('change',e=>{profile.mblur=e.target.checked;saveProfile();});
 $('shpTog').addEventListener('change',e=>{profile.sharp=e.target.checked;saveProfile();});
 $('shkTog').addEventListener('change',e=>{profile.camShake=e.target.checked;saveProfile();});
@@ -9046,7 +9058,7 @@ function torchShadowQ(sq){torch.castShadow=sq>=2;torch.shadow.radius=sq>=3?1:2.5
    fungerar som förut. Huvudet sitter på samma höjd som soldatens så att huvudskott stämmer. De klassiska soldaterna finns kvar:
    Inställningar → Spel → Gubbar. */
 const CRIT_COATS=[{f:0xa3491b,b:0xeab386,e:0x8a3a19,i:0x6a3a14}]; // päls, ljus mage, öron, iris (en enda hund)
-const CRC={coat:0xa3491b,coatD:0x7d3315,light:0xe7a875,lightD:0xc77b49,earO:0x8a3a19,earI:0x6b2d18,brow:0x56200b,pad:0x3f2b2a,claw:0x2b1e1b,nose:0x141111,
+const CRC={coat:0x9c4a21,coatD:0x6a2c12,light:0xeab47f,lightD:0xc77b49,earO:0x8a3a19,earI:0x6b2d18,brow:0x56200b,pad:0x3f2b2a,claw:0x2b1e1b,nose:0x141111,
   mouth:0x5e1c20,muz:0xe9b27a,whisk:0x6a3416,nostril:0x050404,tongue:0xe3757f,teeth:0xf4f0e6,lash:0x23120a,gear:0x3c412f,gearD:0x272a21,metal:0xa9aeb2,lens:0x1c4452,white:0xf3f0e8,red:0xd8322a};
 const _crCC={};const crRGB=h=>_crCC[h]||(_crCC[h]=(()=>{const c=new THREE.Color(h).convertSRGBToLinear();return[c.r,c.g,c.b];})());
 const crMix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t],crMul=(a,k)=>[a[0]*k,a[1]*k,a[2]*k];
@@ -9111,7 +9123,7 @@ function crTorsoW(p){const y=p.y,a=crSS(.56,.7,y),b=crSS(.84,.97,y),c=crSS(1.27,
 function crTorsoCol(p,n){const y=p.y,r=crTorsoR(y),f=clamp((p.z-r[0])/Math.max(.05,p.z>r[0]?r[2]:r[3]),-1,1);
   const lo=.42+.3*crSS(.85,1.2,y),L=.85*crSS(lo,lo+.3,f)*crSS(.3,.44,y)*(1-crSS(1.17,1.31,y));
   let c=crMix(crRGB(CRC.coat),crMix(crRGB(CRC.light),crRGB(CRC.lightD),crSS(.62,.18,f)),L);
-  c=crMul(c,1-.2*crSS(.25,.85,-f)*crSS(.5,1,y));
+  c=crMix(c,crRGB(CRC.coatD),.42*crSS(.15,.85,-f)*crSS(.5,.95,y)*(1-crSS(1.3,1.45,y)));
   c=crMul(c,1-.4*crSS(.25,.85,-n.y)*(1-crSS(.55,.75,y)));
   return c;}
 
@@ -9179,7 +9191,7 @@ const crFurTx=()=>chTex('crFur2',()=>{const S=256,c=document.createElement('canv
 const crFurMat=()=>chMat('crFur2',()=>{const t=crFurTx(),m=std({color:C(0xffffff),vertexColors:true,map:t[0],normalMap:t[1],normalScale:new THREE.Vector2(.5,.5),roughness:.62,metalness:0,envMap:ENV,envMapIntensity:.3,skinning:true});
   m.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <aomap_fragment>','#include <aomap_fragment>\n{float crF=pow(1.0-clamp(dot(normal,normalize(vViewPosition)),0.0,1.0),2.4);reflectedLight.directDiffuse*=1.0+.7*crF;reflectedLight.indirectDiffuse*=1.0+.5*crF;}');};
   m.customProgramCacheKey=()=>'crFur2';return m;});
-const crTeamMat=t=>chMat('crT2'+t,()=>{const h=t==='A'?0xff7a12:0x2a9cff;return std({color:C(h),roughness:.42,emissive:C(h),emissiveIntensity:.28,envMap:ENV,envMapIntensity:.45,skinning:true});});
+const crTeamMat=t=>chMat('crT2'+t,()=>{const h=t==='A'?0xff7a12:0x2a9cff;return std({color:C(h),roughness:.42,emissive:C(h),emissiveIntensity:.2,envMap:ENV,envMapIntensity:.45,skinning:true});});
 const crGearMat=()=>chMat('crG2',()=>std({color:C(0xffffff),vertexColors:true,roughness:.55,metalness:.15,envMap:ENV,envMapIntensity:.5,skinning:true}));
 const crGlossMat=()=>chMat('crS2',()=>std({color:C(0xffffff),vertexColors:true,roughness:.16,metalness:0,envMap:ENV,envMapIntensity:1,skinning:true}));
 // ögat: glob med pupill, iris med strålar, mörk ring och vitt (polen pekar framåt)
@@ -9264,7 +9276,7 @@ function crTemplate(){if(CR_T)return CR_T;
   const scarf=gch('crScarf',()=>{const s=new THREE.Shape();s.moveTo(-.11,0);s.quadraticCurveTo(0,.02,.11,0);s.quadraticCurveTo(.03,-.06,0,-.14);s.quadraticCurveTo(-.03,-.06,-.11,0);
     const g=new THREE.ExtrudeGeometry(s,{depth:.012,bevelEnabled:true,bevelThickness:.005,bevelSize:.005,bevelSegments:2,curveSegments:12});g.translate(0,0,-.006);
     const p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i);p.setZ(i,p.getZ(i)-2.2*x*x);}return g;});
-  TM.push({g:torG(.152,.021,8,40),m:M(0,.335,.024,PI/2+.1,0,0,1,.97,1),bone:'chest'},{g:scarf,m:M(0,.338,.158,-.42,0,0),bone:'chest'},
+  TM.push({g:torG(.15,.0145,8,40),m:M(0,.335,.024,PI/2+.1,0,0,1,.97,1),bone:'chest'},{g:scarf,m:M(0,.338,.158,-.42,0,0),bone:'chest'},
     {g:S2,m:M(0,.338,-.142,0,0,0,.03,.024,.022),bone:'chest'},{g:S2,m:M(.013,.31,-.15,0,0,.5,.016,.032,.012),bone:'chest'},{g:S2,m:M(-.013,.31,-.15,0,0,-.5,.016,.032,.012),bone:'chest'});
   // selen: ett band runt bröstet och två över axlarna (följer kroppens yta), spänne fram
   const toChest=()=>[['chest',1]];
@@ -9278,18 +9290,18 @@ function crTemplate(){if(CR_T)return CR_T;
     {g:S2,m:M(0,.205,0,0,0,0,.009),bone:'ant',col:CRC.red});
   CR_T={fur:crBake(F,BM),team:crBake(TM,BM),gear:crBake(GE,BM),gloss:crBake(GL,BM)};return CR_T;}
 
-const CRIT_SUP=new THREE.Vector3(0,-.045,.025),CRIT_MAG=new THREE.Vector3(0,-.12,.06),CRIT_HIP=new THREE.Vector3(.1,-.22,-.06),_crv=new THREE.Vector3();
+const CR_HEADK=1.1;const CRIT_SUP=new THREE.Vector3(0,-.045,.025),CRIT_MAG=new THREE.Vector3(0,-.12,.06),CRIT_HIP=new THREE.Vector3(.1,-.22,-.06),_crv=new THREE.Vector3();
 function critRl(u){const a=u<.18?ez(u/.18):u<.85?1:1-ez((u-.85)/.15),h=u<.3?0:u<.42?ez((u-.3)/.12):u<.5?1:u<.62?1-ez((u-.5)/.12):0;return _crv.copy(CRIT_SUP).lerp(CRIT_MAG,a).lerp(CRIT_HIP,h);}
 function buildCritter(team,gunMat,opt){opt=opt||{};
   const TT=crTemplate(),{N,bones}=crRig(),T=chTemplate(team);
   const g=new THREE.Group();g.rotation.order='YXZ';g.add(N.body);scene.add(g);g.updateMatrixWorld(true);
   const sk=new THREE.Skeleton(bones),meshes=[];
   for(const [geo,mat] of [[TT.fur,crFurMat()],[TT.team,crTeamMat(team==='B'?'B':'A')],[TT.gear,crGearMat()],[TT.gloss,crGlossMat()]]){
-    const m=new THREE.SkinnedMesh(geo,mat);m.castShadow=geo!==TT.gloss;m.receiveShadow=true;N.body.add(m);m.bind(sk);meshes.push(m);}
+    const m=new THREE.SkinnedMesh(geo,mat);m.castShadow=geo!==TT.gloss;m.receiveShadow=true;N.body.add(m);m.bind(sk);meshes.push(m);}N.neck.scale.setScalar(CR_HEADK);
   // ögonen: glob (vrids när hunden tittar), två glansprickar som sitter still
   const eyes=[];for(const sd of ['R','L']){const so=N['sock'+sd],ball=new THREE.Object3D();so.add(ball);
     const e=new THREE.Mesh(crEyeG(),crEyeMat());e.scale.set(.054,.0575,.0475);ball.add(e);
-    const h1=new THREE.Mesh(crS14(),crHiMat());h1.position.set(-.014,.013,.046);h1.scale.set(.0085,.009,.004);so.add(h1);
+    const h1=new THREE.Mesh(crS14(),crHiMat());h1.position.set(-.015,.014,.046);h1.scale.set(.0105,.011,.0045);so.add(h1);
     const h2=new THREE.Mesh(crS14(),crHiMat());h2.position.set(.012,-.016,.0465);h2.scale.set(.004,.004,.002);so.add(h2);eyes.push({ball,sd:sd==='R'?-1:1});}
   // vapnet (kort kolv), mynningsflamma och skugga under fötterna
   const gunG=new THREE.Group();gunG.rotation.order='YXZ';N.chest.add(gunG);let gun=null;
@@ -9297,7 +9309,7 @@ function buildCritter(team,gunMat,opt){opt=opt||{};
   const fl=new THREE.Mesh(new THREE.PlaneGeometry(.24,.24),flashMat);fl.position.set(0,.028,.6);fl.visible=false;gunG.add(fl);
   const blob=new THREE.Mesh(blobGeo,blobMat);blob.position.y=.025;blob.scale.set(1.2,1,1.2);blob.renderOrder=1;g.add(blob);
   // personlighet: varje hund viftar, blinkar, glor och har sina egna små vanor på sitt sätt
-  const pers={wag:rand(.75,1.35),energy:rand(.75,1.3),smug:Math.random()<.5?-1:1,lidOff:rand(-.05,.08),earSide:Math.random()<.5?-1:1,earLift:rand(-.05,.22),tilt:rand(-.1,.1),
+  const pers={blep:Math.random()<.35,wag:rand(.75,1.35),energy:rand(.75,1.3),smug:Math.random()<.5?-1:1,lidOff:rand(-.05,.08),earSide:Math.random()<.5?-1:1,earLift:rand(-.05,.22),tilt:rand(-.1,.1),
     q:{shake:rand(.4,1.4),yawn:rand(.3,1),sniff:rand(.5,1.4),look:rand(.6,1.5),happy:rand(.3,1.2)}};
   const ears=[{sd:-1,b0:N.earR0,b1:N.earR1,a:0,v:0,b:0,w:0,u:.12,c:0},{sd:1,b0:N.earL0,b1:N.earL1,a:0,v:0,b:0,w:0,u:.12,c:0}];
   const R={N,eyes,ears,tail:[N.tail0,N.tail1,N.tail2],pers,sk,meshes,gunZ:CR_GUN.chest+CR_GUN.back};
@@ -9403,8 +9415,9 @@ function animCritter(s,o,dt){const A=s.an,R=s.crp,N=R.N,Q=CRIT_CR,PS=R.pers,k=r=
   const nx=alive?clamp(-pitch-(pose+spX+chX)+fl*(o.hh?-.55:.2)+nod+Q.nk*A.crK+A.kick*.5-.32*qs('yawn')-.2*qs('sniff')+.05*Math.sin(qt*15)*qs('sniff')-.3*hitP*(o.hh?1.6:1),-1.35,1.1):(onBack?-.5*e2:.4*e2);
   s.neck.rotation.set(nx,.15*st+(o.look||0)-(sprint?.2:0)+.55*Math.sin(qt*2.2)*qs('look'),-.1*lean+tilt+(!alive?.5*e2*((A.dSide||0)>=0?1:-1):0)+.12*Math.sin(qt*2.2+1)*qs('look'));
   // ansiktet: ögonlock (0 öppet … 1 stängt), undre lock, ögonbryn (höjd och vinkel), käke och tunga
-  let lU=.15+PS.lidOff*.5,lD=.06,bY=0,bA=0,jw=0,tg=0,smug=1;
+  let lU=.03+PS.lidOff*.45,lD=.04,bY=0,bA=0,jw=0,tg=0,smug=1;
   if(sprint){lU=.24;jw=.3;tg=.9;smug=0;}else if(spd>4.6){jw=.16;tg=.45;smug=.5;}
+  if(PS.blep&&alive&&!sprint){tg=Math.max(tg,.7);jw=Math.max(jw,.035);}
   if(A.crK>.5){lU=.24;bA=.12;smug=0;}
   if(A.angry>0){lU=.3;lD=.3;bY=-.006;bA=.42;jw=Math.max(jw,.08);smug=0;}
   {const y1=qs('yawn'),h1=qs('happy'),s1=qs('sniff'),k1=qs('shake'),l1=qs('look');
@@ -9450,7 +9463,7 @@ function animCritter(s,o,dt){const A=s.an,R=s.crp,N=R.N,Q=CRIT_CR,PS=R.pers,k=r=
   s.body.position.set(-.045*hS,.25*A.prK+(onBack?.24:cr1?.12:.2)*e2,-.9*A.prK-.06*fl*hC-.05*hitP*hC);
   if(s.blob){s.blob.visible=alive||A.dead<1.5;const sx=cr1?1.1*e2:.45*e2,sz=cr1?.3*e2:1.1*e2;s.blob.scale.set(1.2+.15*A.prK+sx,1,1.2+1.2*A.prK+sz);s.blob.position.z=-.05*A.prK-(cr1?0:A.dDir*.8*e2);s.blob.position.x=cr1?-sg*.8*e2:0;}
 }
-function crWarm(){try{if(crWarm.done||charStyle()!=='critter')return;crWarm.done=1;const s=buildCritter('A');const s2=buildCritter('B');
+function crWarm(){crWarm.done=1;return;try{if(crWarm.done||charStyle()!=='critter')return;crWarm.done=1;const s=buildCritter('A');const s2=buildCritter('B');
   for(const d of [s,s2])d.g.position.set(0,-50,0);renderer.compile(scene,camera);setTimeout(()=>{for(const d of [s,s2])if(d.g.parent)d.g.parent.remove(d.g);},400);}catch(e){console.warn(e);}}
 const CRIT2={crWarm,crTemplate,crTorsoP,crTorsoR,crHeadP,crRig,CR_BI,CR_GUN,CR_RIG};
 // vilken gubbe som används: Taxen (ny) eller de klassiska soldaterna (sparas i profilen)
@@ -9469,11 +9482,10 @@ function syncCharSeg(){const sg=$('charSeg');if(sg)[...sg.children].forEach(b=>b
   if(v!==charStyle()){profile.chars=v;saveProfile();swapChars();try{setSaved(v==='classic'?L('Klassiska soldater','Classic soldiers'):L('Taxen','The Dachshund'));}catch(err){}}syncCharSeg();});}
 syncCharSeg();
 // när matchen förbereds: kompilera hundens shaders (även skuggorna) med en gömd hund, så att första hunden som dyker upp inte fryser spelet
-{const _ws=warmShaders,crRT=new THREE.WebGLRenderTarget(64,64);warmShaders=function(){let d=null;
-  try{if(charStyle()==='critter'){d=buildCritter('A');const f=new THREE.Vector3();camera.getWorldDirection(f);d.g.position.copy(camera.position).addScaledVector(f,3);d.g.position.y-=1.2;animCritter(d,{spd:0},0);}}catch(e){d=null;}
-  const r=_ws.apply(this,arguments);
-  if(d){try{const prev=renderer.getRenderTarget();renderer.setRenderTarget(crRT);renderer.render(scene,camera);renderer.setRenderTarget(prev);}catch(e){}if(d.g.parent)d.g.parent.remove(d.g);}
-  return r;};}
+{const _ws=warmShaders;warmShaders=function(){
+  try{if(charStyle()==='critter'&&!WARM.tmp.length){for(const tm of ['A','B']){const d=buildCritter(tm,undefined,{coat:0});d.g.position.set(0,-60,0);animCritter(d,{spd:0},0);d.g.visible=false;WARM.tmp.push(d.g);}
+    setTimeout(()=>{if(!WARM.on&&!WARM.req)warmDone();},90000);}}catch(e){}
+  return _ws.apply(this,arguments);};}
 setTimeout(()=>{const w=()=>crWarm();if(window.requestIdleCallback)requestIdleCallback(w,{timeout:4000});else w();},2500);
 {const _syncSet1=syncSet;syncSet=function(){const r=_syncSet1.apply(this,arguments);syncCharSeg();return r;};}
 
