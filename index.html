@@ -1050,9 +1050,80 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
 @media (max-aspect-ratio:1/1){#dogLoad .dlP{top:16vh;height:72vh}#dogLoad .dlT{top:4vh;left:0;right:0;text-align:center;font-size:12vw}#dogLoad .dlTip{left:3vw;right:3vw;max-width:none;bottom:calc(max(5vh,30px) + 56px)}#dogLoad .dlBar{width:60vw}}
 </style>
 <script>
+/* v44: körs före allt annat.
+   1) Mobil och surfplatta får en egen skärm (spelet kräver tangentbord och mus) och resten av spelet startas inte.
+   2) Namnfiltret, som både kontosidan och spelet använder. Ordlistan ligger rot13-kodad så att orden inte står i klartext i sidan. */
+(function(){
+  var ua=navigator.userAgent||'',tp=navigator.maxTouchPoints||0,force=false;
+  try{force=sessionStorage.getItem('dog.pc')==='1'||/[?&]pc=1\b/.test(location.search);}catch(e){}
+  var mob=/Android|iPhone|iPad|iPod|Windows Phone|Mobile|Silk|Kindle|Opera Mini/i.test(ua)||(/Macintosh/.test(ua)&&tp>1);
+  if(/[?&]mobil=1\b/.test(location.search))mob=true;
+  if(mob&&!force){window.__DOG_MOBILE=1;document.documentElement.classList.add('isMob');}
+
+  var D=function(s){return s.replace(/[a-z]/g,function(c){return String.fromCharCode((c.charCodeAt(0)-84)%26+97);});};
+  var HARD=D('shpx,cuhpx,fuvg,ovgpu,ovngpu,phag,avttre,avttn,snttbg,ergneq,juber,chffl,cravf,intvan,cbea,encvfg,anmv,uvgyre,crqbsvy,crqbcuvy,cnrqb,nffubyr,onfgneq,jnax,wvmm,qvyqb,oybjwbo,unaqwbo,genaal,zvys,uragnv,phzfubg,betnfz,zbyrfg,vaprfg,fcnfgvp,fpubbyfubbg,fxbyfxwhg,xvyylbhefrys,fvrturvy,pbpxfhpx,qvpxurnq,svggn,xhxra,xhxuhihq,xhxfht,ubehatr,fylan,fynzcn,artre,oynggr,finegfxnyyr,wniyn,xahyy,inyqgn').split(','),SOFT=D('nff,nefr,pbpx,qvpx,phz,frk,frkl,fyhg,ubr,gubg,gvg,obbo,nany,nahf,encr,encre,snt,qlxr,fcvp,xvxr,pbba,puvax,tbbx,gjng,crqb,abapr,xxx,xlf,urvy,vfvf,ahqr,kkk,shx,spx,sphx,shd,fug,ogpu,pag,avtn,avtt,xhx,uben,ubena,uber,obrt,pc,zbatb,ehax,ehaxn,cnggne,ghggne,fabcc,wniry,fhoon,yhqre,arteb,ubeal,nqzva,nqzvavfgengbe,zbqrengbe,zbq,fgnss,fhccbeg,bssvpvny,flfgrz').split(',');
+  var leet=function(s){return s.toLowerCase().replace(/0/g,'o').replace(/[1!|]/g,'i').replace(/3/g,'e').replace(/[4@]/g,'a').replace(/[5$]/g,'s').replace(/7/g,'t').replace(/8/g,'b').replace(/9/g,'g');};
+  var az=function(s){return s.replace(/[^a-z]/g,'');};
+  window.DOG_BADNAME=function(n){
+    var raw=String(n||''),low=raw.toLowerCase(),a=az(low),b=az(leet(raw));
+    var forms=[a,b,a.replace(/(.)\1{2,}/g,'$1'),b.replace(/(.)\1{2,}/g,'$1'),a.replace(/(.)\1{2,}/g,'$1$1'),b.replace(/(.)\1{2,}/g,'$1$1')],i,j;
+    for(i=0;i<HARD.length;i++)for(j=0;j<forms.length;j++)if(forms[j].indexOf(HARD[i])>=0)return true;
+    var cam=raw.replace(/([a-z])([A-Z])/g,'$1 $2');
+    var tok=cam.toLowerCase().split(/[^a-z]+/).concat(leet(cam).split(/[^a-z]+/),[a,b]);
+    for(i=0;i<tok.length;i++){var t=tok[i];if(!t)continue;if(SOFT.indexOf(t)>=0||SOFT.indexOf(t.replace(/(.)\1+/g,'$1'))>=0||(t.length>3&&t.charAt(t.length-1)==='s'&&SOFT.indexOf(t.slice(0,-1))>=0))return true;}
+    return false;
+  };
+
+  if(!window.__DOG_MOBILE)return;
+  var go=function(){
+    var sv=/^sv/i.test(navigator.language||''),T=function(a,b){return sv?a:b;};
+    var url=/github\.io$/i.test(location.hostname)?location.origin+location.pathname:'https://doglersgame.github.io/';
+    var st=document.createElement('style');
+    st.textContent='html.isMob,html.isMob body{height:auto;min-height:100%;overflow:auto;background:#17121b}html.isMob body>*:not(#mobScr){display:none!important}'+
+      '#mobScr{min-height:100vh;min-height:100dvh;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:18px;padding:max(26px,env(safe-area-inset-top)) 22px max(28px,env(safe-area-inset-bottom));'+
+      'background:radial-gradient(120% 70% at 50% 0%,#4a2440 0%,#2a1830 42%,#17121b 100%);color:#f7efe9;font-family:Barlow,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;text-align:center}'+
+      '#mobScr .mLogo{font:italic 800 64px/.86 "Barlow Condensed","Arial Narrow",Arial,sans-serif;letter-spacing:.01em;color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.35);margin-top:6px}#mobScr .mLogo span{color:#ffb648}'+
+      '#mobScr .mTag{font:700 13px/1 "Barlow Condensed","Arial Narrow",Arial,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:#ffb648}'+
+      '#mobScr .mPic{width:100%;max-width:440px;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#0e0b11;box-shadow:0 18px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08)}#mobScr .mPic img{display:block;width:100%;height:100%;object-fit:cover}'+
+      '#mobScr h2{font:800 30px/1.05 "Barlow Condensed","Arial Narrow",Arial,sans-serif;letter-spacing:.02em;text-transform:uppercase;margin:4px 0 0;text-wrap:balance}'+
+      '#mobScr p{font-size:16px;line-height:1.5;color:#d9cdd4;margin:0;max-width:34ch;text-wrap:pretty}'+
+      '#mobScr .mUrl{font:600 15px/1 ui-monospace,Menlo,Consolas,monospace;color:#fff;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:12px 14px;width:100%;max-width:440px;box-sizing:border-box;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}'+
+      '#mobScr .mBtns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:440px}'+
+      '#mobScr button,#mobScr a.mB{font:800 18px/1 "Barlow Condensed","Arial Narrow",Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;border-radius:12px;padding:16px 18px;min-height:52px;box-sizing:border-box;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#fff;text-decoration:none;display:block;width:100%;cursor:pointer}'+
+      '#mobScr button.mMain{background:linear-gradient(180deg,#ffc56a,#ff8a3d);border-color:transparent;color:#2a1408;box-shadow:0 10px 24px rgba(255,138,61,.35)}'+
+      '#mobScr button:active,#mobScr a.mB:active{transform:translateY(1px)}'+
+      '#mobScr .mSmall{font-size:13px;color:#a8989f;margin-top:auto;padding-top:10px}#mobScr .mSmall button{all:unset;color:#d9cdd4;text-decoration:underline;cursor:pointer;font:inherit;padding:10px 4px}';
+    document.head.appendChild(st);
+    var d=document.createElement('div');d.id='mobScr';d.lang=sv?'sv':'en';
+    d.innerHTML='<div class="mLogo">DOG<br><span>LERS</span></div><div class="mTag">'+T('Gratis 3D-shooter i webbläsaren','Free 3D shooter in your browser')+'</div>'+
+      '<div class="mPic" id="mPic"></div>'+
+      '<h2>'+T('Spelas på dator','Play it on a computer')+'</h2>'+
+      '<p>'+T('Doglers behöver tangentbord och mus, så det går inte att spela på mobilen än. Öppna länken på en dator: inget att ladda ner och inget konto behövs.','Doglers needs a keyboard and mouse, so it doesn’t run on phones yet. Open the link on a computer: nothing to download and no account needed.')+'</p>'+
+      '<div class="mUrl" id="mUrl"></div>'+
+      '<div class="mBtns"><button type="button" class="mMain" id="mCopy">'+T('Kopiera länken','Copy the link')+'</button>'+
+      '<button type="button" id="mShare" hidden>'+T('Skicka länken till mig själv','Send the link to myself')+'</button>'+
+      '<a class="mB" href="https://www.tiktok.com/@poopy.studiogames" target="_blank" rel="noopener">'+T('Se klipp på TikTok','Watch clips on TikTok')+'</a></div>'+
+      '<div class="mSmall">'+T('Har du tangentbord och mus inkopplat? ','Got a keyboard and mouse plugged in? ')+'<button type="button" id="mForce">'+T('Starta ändå','Start anyway')+'</button></div>';
+    document.body.appendChild(d);
+    document.getElementById('mUrl').textContent=url.replace(/^https?:\/\//,'').replace(/\/$/,'');
+    if(/github\.io$/i.test(location.hostname)){var im=new Image();im.alt=T('Bild från spelet','A picture from the game');im.onload=function(){document.getElementById('mPic').appendChild(im);};im.onerror=function(){var p=document.getElementById('mPic');if(p)p.remove();};im.src='preview.jpg';}
+    else{var pp=document.getElementById('mPic');if(pp)pp.remove();}
+    var cp=document.getElementById('mCopy');
+    cp.onclick=function(){var done=function(){cp.textContent=T('Kopierad! Klistra in på datorn','Copied! Paste it on your computer');setTimeout(function(){cp.textContent=T('Kopiera länken','Copy the link');},2600);};
+      var old=function(){try{var i=document.createElement('input');i.value=url;document.body.appendChild(i);i.select();document.execCommand('copy');i.remove();done();}catch(e){}};
+      try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done,old);else old();}catch(e){old();}};
+    var sh=document.getElementById('mShare');
+    if(navigator.share){sh.hidden=false;sh.onclick=function(){try{navigator.share({title:'Doglers',text:T('Doglers – gratis 3D-shooter. Öppna på datorn:','Doglers – free 3D shooter. Open on a computer:'),url:url}).catch(function(){});}catch(e){}};}
+    document.getElementById('mForce').onclick=function(){try{sessionStorage.setItem('dog.pc','1');}catch(e){}location.reload();};
+  };
+  if(document.body)go();else document.addEventListener('DOMContentLoaded',go);
+})();
+</script>
+<script>
 /* laddningsskärm: den tjocka taxen i soffan blir bredare för varje procent; visas när spelet startar och varje gång en bana laddas.
    Tre tips som turas om, ett nytt varje gång skärmen visas. */
 (function(){
+  if(window.__DOG_MOBILE)return;
   const root=document.getElementById('dogLoad'),cv=document.getElementById('dlC'),ctx=cv.getContext('2d');
   const isSv=()=>{try{if(typeof LANG!=='undefined')return LANG==='sv';}catch(e){}try{const p=JSON.parse(localStorage.getItem('ilp.profile.v3')||'{}');return!!(p&&p.lang==='sv');}catch(e){return false;}};
   const TIPS={sv:['Nästan alla väggar går att skjuta sönder. Gör din egen dörr!','Bär guldpottan till er zon för att vinna rundan direkt.','Ducka med C. Då är du svårare att träffa och skjuter mer exakt.'],
@@ -1079,7 +1150,7 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
   function tick(){if(!S.on)return;const now=performance.now(),t=(now-S.T0)/1000;
     if(S.boot&&!S.done){const b=document.getElementById('bootScr');if((b&&b.hidden)||vis('fbLog')||vis('menu')||vis('nameScr')||t>90)finish();}
     // jämn takt: procenten räknas upp en i taget; hunden växer en liten bit för varje procent
-    let p=Math.min(.95,t/S.EST);
+    let p=Math.min(.95,t/S.EST);if(window.__warmBusy&&!S.done)p=Math.min(p,.12+.83*(+window.__warmK||0));
     if(S.done){if(!S.doneP){S.doneP=Math.max(p,S.pc/100);if(S.boot){try{localStorage.setItem('doglers.loadT',String(Math.round(t*10)/10));}catch(e){}}}
       const q=Math.min(1,(now-S.doneT)/Math.max(300,(1-S.doneP)*1600));p=S.doneP+(1-S.doneP)*q;}
     const dt=Math.min(.25,(now-(S.lastT||now))/1000);S.lastT=now;
@@ -1093,7 +1164,7 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
   // kör tungt arbete (en bana byggs) bakom laddningsskärmen: visa först, låt den hinna ritas, kör, vänta in de första bildrutorna, fyll upp och tona bort
   const raf=n=>new Promise(r=>{const f=()=>(--n<=0?r():requestAnimationFrame(f));requestAnimationFrame(f);});
   function run(fn,minSec){show(false,(minSec||1.8)/.95);const t0=performance.now();
-    return raf(2).then(()=>{try{fn();}catch(e){console.warn('dogLoad',e);}return raf(4);}).then(()=>{
+    return raf(2).then(()=>{try{fn();}catch(e){console.warn('dogLoad',e);}return raf(3);}).then(()=>new Promise(r=>{const t1=performance.now();const w=()=>{if(window.__warmBusy&&performance.now()-t1<120000)requestAnimationFrame(w);else r();};w();})).then(()=>raf(4)).then(()=>{
       const left=(minSec||1.8)*1000-(performance.now()-t0);return new Promise(r=>setTimeout(r,Math.max(0,left)));}).then(finish);}
   window.dogLoad={show,finish,run,get on(){return S.on;},get done(){return S.done;},get tip(){return S.ti;}};
   window.__dogLoad=window.dogLoad;
@@ -1118,6 +1189,7 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
   </div>
 
 <style>.ttLink{display:inline-flex;width:max-content;max-width:100%;align-self:flex-start;align-items:center;gap:8px;margin:2px 0 14px;padding:7px 14px 7px 11px;border-radius:999px;background:rgba(0,0,0,.35);border:1px solid rgba(255,182,72,.45);color:var(--fg,#fff);text-decoration:none;font:700 14px Barlow,Arial,sans-serif;transition:background .15s,border-color .15s}.ttLink svg{color:#ffb648}.ttLink b{color:#ffb648;font-weight:800}.ttLink:hover{background:rgba(255,182,72,.16);border-color:#ffb648}.ttLink:focus-visible{outline:2px solid #ffb648;outline-offset:2px}</style>
+<style>.note.guest{color:var(--fg);border-left-color:var(--signal);display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.45}.note.guest .gRow{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.btn.small{font-size:15px;padding:8px 16px}</style>
   <div id="menu" class="overlay" hidden>
     <div class="brief">
       <div class="who"><span class="lbl">Spelare</span><b id="meName">–</b><span class="wallet" id="wallet">0 kr</span><button class="link" id="renameBtn" type="button">Byt namn</button><button class="link langBtn" type="button">English</button></div>
@@ -1224,6 +1296,8 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
           <div class="sRow"><div class="sL"><b>Studsljus</b><small>Ytan du lyser på sprider ljuset vidare ut i rummet</small></div><div class="sC"><label class="sSw"><input type="checkbox" id="fbounceTog"><i></i></label></div></div>
           <div class="sRow"><div class="sL"><b>Mjuk följning</b><small>Ljuset släpar en aning efter när du vänder dig, som en riktig lampa i handen</small></div><div class="sC"><label class="sSw"><input type="checkbox" id="tlagTog"><i></i></label></div></div>
           <div class="sRow"><div class="sL"><b>Fåglar på himlen</b><small>Flockar som flyger över kartan · Effektkvalitet Medel och Hög</small></div><div class="sC"><label class="sSw"><input type="checkbox" id="lifeTog"><i></i></label></div></div>
+          <div class="sRow"><div class="sL"><b>Väder</b><small>Regn, snö, löv och sand som blåser · Effektkvalitet Medel och Hög</small></div><div class="sC"><label class="sSw"><input type="checkbox" id="wxTog"><i></i></label></div></div>
+          <div class="sRow"><div class="sL"><b>Blixtar</b><small>Åskan på Slottet lyser upp himlen. Stäng av om du är känslig för blinkande ljus.</small></div><div class="sC"><label class="sSw"><input type="checkbox" id="boltTog"><i></i></label></div></div>
         </div>
         <div class="setPane" data-s="aud" role="tabpanel" hidden>
           <h3 class="sH">Volym</h3>
@@ -1390,6 +1464,7 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
 <script>
 /* ---------- Doglers utanför claude.ai: konton och multiplayer via Firebase ---------- */
 (function(){
+  if(window.__DOG_MOBILE)return;
   const H=location.hostname||'';
   const ON=/[?&]fb=1\b/.test(location.search)||/(^|\.)(github\.io|localhost|127\.0\.0\.1|itch\.io|itch\.zone|netlify\.app|pages\.dev|vercel\.app|web\.app|firebaseapp\.com)$/i.test(H)||H==='localhost'||H==='127.0.0.1';
   if(!ON||window.claude)return;
@@ -1409,7 +1484,8 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
     throw new Error('firebase');
   }
   let fb=null,auth=null,rt=null;
-  const ready=(async()=>{await loadFb();fb=firebase.apps.length?firebase.app():firebase.initializeApp(CFG);auth=fb.auth();rt=fb.database();})();
+  let readyP=null;const getReady=()=>readyP||(readyP=(async()=>{await loadFb();fb=firebase.apps.length?firebase.app():firebase.initializeApp(CFG);auth=fb.auth();rt=fb.database();})());
+  const ready={then:(a,b)=>getReady().then(a,b),catch:f=>getReady().catch(f)};
 
   /* ---- dokument: {_j: hela objektet som JSON, + enkla fält för regler och sökningar} ---- */
   const key=s=>String(s).replace(/[.#$\[\]]/g,'_');
@@ -1492,7 +1568,7 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
     room:()=>userReady.then(()=>{if(!lobby){lobby=makeRoom('lobby');}return lobby;})
   };
   window.claude={use:n=>api[n]?api[n]():Promise.reject(new Error('no '+n))};
-  window.DOGLERS_FB={signOut:async()=>{await ready;try{if(lobby)await lobby.leave();}catch(e){}await auth.signOut();try{localStorage.removeItem('ilp.profile.v3');localStorage.removeItem('ilp.fbuid');}catch(e){}location.reload();}};
+  window.DOGLERS_FB={guest:false,login:m=>{if(auth&&auth.currentUser){location.reload();return;}if(ov){ov.hidden=false;if(setModeX)setModeX(m==='in'?'in':'new');attach();setTimeout(()=>{const f=document.getElementById(m==='in'?'fbMail':'fbUser');if(f)f.focus();},60);}},signOut:async()=>{await ready;try{if(lobby)await lobby.leave();}catch(e){}await auth.signOut();try{localStorage.removeItem('ilp.profile.v3');localStorage.removeItem('ilp.fbuid');}catch(e){}location.reload();}};
 
   const css=`#fbLog{position:fixed;inset:0;z-index:60}#fbLog .tabs2{display:flex;gap:18px}#fbLog .tabs2 button{background:none;border:0;color:var(--muted);font:800 18px var(--display);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:0 0 4px;border-bottom:2px solid transparent}
 #fbLog .tabs2 button[aria-selected=true]{color:var(--fg);border-color:var(--signal)}#fbLog form{display:flex;flex-direction:column;gap:12px;max-width:420px}#fbLog label{display:flex;flex-direction:column;gap:5px}
@@ -1502,7 +1578,7 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
     const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
     const o=document.createElement('div');o.id='fbLog';o.className='overlay';o.hidden=true;
     o.innerHTML=`<div class="brief"><div class="eyebrow">${T('Konto','Account')}</div><h1>DOG<br><span>LERS</span></h1>
-<p>${T('Logga in för att spela med kompisar, spara dina pengar och skins och skicka vänförfrågningar.','Sign in to play with friends, keep your money and skins, and send friend requests.')}</p>
+<p>${T('Med ett gratis konto kan du möta riktiga spelare, spela med kompisar och spara dina pengar och skins. Det du har tjänat som gäst följer med till ett nytt konto.','A free account lets you play real players, team up with friends and keep your money and skins. What you earned as a guest carries over to a new account.')}</p>
 <div class="tabs2" role="tablist"><button type="button" role="tab" data-m="new" aria-selected="true">${T('Skapa konto','Create account')}</button><button type="button" role="tab" data-m="in" aria-selected="false">${T('Logga in','Sign in')}</button></div>
 <form id="fbForm" novalidate>
 <label data-only="new"><span class="lbl">${T('Användarnamn','Username')}</span><input id="fbUser" maxlength="16" autocomplete="username" spellcheck="false" placeholder="${T('t.ex. Hundbaronen','e.g. DogBaron')}"></label>
@@ -1511,13 +1587,13 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
 <div class="small" data-only="new">${T('Användarnamn: 3–16 tecken, A–Z, siffror, _ och -','Username: 3–16 characters, A–Z, digits, _ and -')}</div>
 <div class="rowb"><button class="btn" id="fbGo" type="submit">${T('Skapa konto','Create account')}</button><button class="link" id="fbForgot" type="button" hidden>${T('Glömt lösenordet?','Forgot password?')}</button></div>
 <div class="err" id="fbErr" role="alert"></div><div class="msg" id="fbMsg"></div></form>
-<button class="link" id="fbOff" type="button">${T('Spela utan konto (bara mot bottar)','Play without an account (bots only)')}</button></div>`;
+<button class="link" id="fbOff" type="button">${T('Tillbaka · fortsätt som gäst','Back · keep playing as a guest')}</button></div>`;
     document.body.appendChild(o);
     o.addEventListener('keydown',e=>e.stopPropagation());o.addEventListener('keyup',e=>e.stopPropagation());
     const $=id=>document.getElementById(id);let mode='new',busy=false;
     const setMode=m=>{mode=m;o.querySelectorAll('.tabs2 button').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===m));o.querySelectorAll('[data-only=new]').forEach(e=>e.hidden=m!=='new');
       $('fbGo').textContent=m==='new'?T('Skapa konto','Create account'):T('Logga in','Sign in');$('fbForgot').hidden=m!=='in';$('fbPass').autocomplete=m==='new'?'new-password':'current-password';$('fbErr').textContent='';$('fbMsg').textContent='';};
-    o.querySelectorAll('.tabs2 button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+    o.querySelectorAll('.tabs2 button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));setModeX=setMode;
     const errTxt=e=>{const c=e&&e.code||'';return({
       'auth/email-already-in-use':T('Den emailen har redan ett konto. Logga in i stället.','That email already has an account. Sign in instead.'),
       'auth/invalid-email':T('Emailen ser inte rätt ut.','That email doesn\'t look right.'),
@@ -1530,10 +1606,11 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
     })[c]||T('Något gick fel: ','Something went wrong: ')+(c||e&&e.message||e);};
     $('fbForgot').onclick=async()=>{const m=$('fbMail').value.trim();if(!m){$('fbErr').textContent=T('Skriv din email först.','Enter your email first.');return;}
       try{await ready;await auth.sendPasswordResetEmail(m);$('fbErr').textContent='';$('fbMsg').textContent=T('Kolla din email för att byta lösenord.','Check your email to reset your password.');}catch(e){$('fbErr').textContent=errTxt(e);}};
-    $('fbOff').onclick=()=>{o.hidden=true;bootVis(true);rejectUser(new Error('offline'));};
+    $('fbOff').onclick=()=>{o.hidden=true;bootVis(true);goGuest();};
     $('fbForm').onsubmit=async ev=>{ev.preventDefault();if(busy)return;const err=$('fbErr');err.textContent='';$('fbMsg').textContent='';
       const u=$('fbUser').value.trim(),m=$('fbMail').value.trim(),p=$('fbPass').value;
       if(mode==='new'&&!NAME_OK.test(u)){err.textContent=T('Användarnamnet måste vara 3–16 tecken: A–Z, siffror, _ eller -.','Username must be 3–16 characters: A–Z, digits, _ or -.');return;}
+      if(mode==='new'&&window.DOG_BADNAME&&window.DOG_BADNAME(u)){err.textContent=T('Det namnet går inte att använda. Välj ett annat.','That name can\'t be used. Pick another one.');return;}
       if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)){err.textContent=T('Skriv en riktig email.','Enter a real email.');return;}
       if(p.length<6){err.textContent=T('Lösenordet måste vara minst 6 tecken.','The password needs at least 6 characters.');return;}
       busy=true;$('fbGo').disabled=true;
@@ -1544,7 +1621,8 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
       }catch(e){pendingName=null;err.textContent=errTxt(e);}finally{busy=false;$('fbGo').disabled=false;}};
     return o;
   }
-  let pendingName=null,ov=null;
+  let pendingName=null,ov=null,setModeX=null,guest=false,settled=false,attached=false;
+  function goGuest(){if(settled)return;settled=true;guest=true;window.DOGLERS_FB.guest=true;if(ov)ov.hidden=true;bootVis(true);rejectUser(new Error('guest'));}
   function bootVis(v){const b=document.getElementById('bootScr');if(b)b.style.visibility=v?'':'hidden';}
   async function claimName(u,name){
     const k=name.toLowerCase(),ref=rt.ref(dpath('names/'+k));
@@ -1552,20 +1630,36 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
     if(!r.committed)return false;
     await rt.ref(dpath('players/'+u)).set(pack({name,key:k}));return true;
   }
-  function outBtn(){const who=document.querySelector('#menu .who');if(!who||document.getElementById('fbOut'))return;const b=document.createElement('button');b.className='link';b.id='fbOut';b.type='button';b.textContent=T('Logga ut','Sign out');b.onclick=()=>window.DOGLERS_FB.signOut();who.appendChild(b);}
-  function boot(){
-    ov=ui();
+  function outBtn(){const who=document.querySelector('#menu .who');if(!who)return;
+    if(guest){if(document.getElementById('fbIn'))return;const b=document.createElement('button');b.className='link';b.id='fbIn';b.type='button';b.textContent=T('Logga in','Sign in');b.onclick=()=>window.DOGLERS_FB.login('in');who.appendChild(b);return;}
+    if(document.getElementById('fbOut'))return;const b=document.createElement('button');b.className='link';b.id='fbOut';b.type='button';b.textContent=T('Logga ut','Sign out');b.onclick=()=>window.DOGLERS_FB.signOut();who.appendChild(b);}
+  function attach(){
+    if(attached)return;attached=true;
     ready.then(()=>{
       auth.onAuthStateChanged(async u=>{
-        if(!u){ov.hidden=false;bootVis(false);setTimeout(()=>{const f=document.getElementById(ov.querySelector('[data-only=new]').hidden?'fbMail':'fbUser');if(f)f.focus();},60);return;}
+        if(!u){if(!settled){try{localStorage.removeItem('ilp.fbuid');}catch(e){}goGuest();}return;}
         let last=null;try{last=localStorage.getItem('ilp.fbuid');}catch(e){}
         if(last&&last!==u.uid){try{localStorage.removeItem('ilp.profile.v3');localStorage.setItem('ilp.fbuid',u.uid);}catch(e){}location.reload();return;}
         try{localStorage.setItem('ilp.fbuid',u.uid);}catch(e){}
         const nm=pendingName||u.displayName;pendingName=null;
         if(nm&&NAME_OK.test(nm)){try{const pl=await rt.ref(dpath('players/'+u.uid)).once('value');if(!pl.exists())await claimName(u.uid,nm);}catch(e){}}
-        ov.hidden=true;bootVis(true);outBtn();resolveUser();
+        // loggade in från gästläget: ladda om så att kontot kopplas in (gästens pengar och skins följer med till ett nytt konto)
+        if(guest){
+          if(ov&&!ov.hidden){const m=document.getElementById('fbMsg');if(m)m.textContent=T('Inloggad! Spelet startar om…','Signed in! Restarting the game…');setTimeout(()=>location.reload(),700);return;}
+          // kontot hann inte svara innan spelet startade i gästläge: ladda om en gång (aldrig i en slinga)
+          let n=0;try{n=+sessionStorage.getItem('dog.lateRl')||0;}catch(e){}if(n<1){try{sessionStorage.setItem('dog.lateRl','1');}catch(e){}location.reload();}return;}
+        try{sessionStorage.removeItem('dog.lateRl');}catch(e){}
+        settled=true;ov.hidden=true;bootVis(true);outBtn();resolveUser();
       });
-    }).catch(()=>{ov.hidden=false;const e=document.getElementById('fbErr');e.textContent=T('Kunde inte ladda inloggningen. Kolla internet och ladda om sidan.','Couldn\'t load sign-in. Check your connection and reload.');document.getElementById('fbGo').disabled=true;});
+    }).catch(()=>{if(!settled){goGuest();return;}const e=document.getElementById('fbErr');if(e)e.textContent=T('Kunde inte ladda inloggningen. Kolla internet och försök igen.','Couldn\'t load sign-in. Check your connection and try again.');attached=false;readyP=null;});
+  }
+  function boot(){
+    ov=ui();
+    let known=null;try{known=localStorage.getItem('ilp.fbuid');}catch(e){}
+    // aldrig inloggad på den här datorn: rakt in i spelet som gäst. Annars väntar vi in kontot, men aldrig längre än tio sekunder.
+    if(!known){goGuest();outBtn();return;}
+    setTimeout(()=>{if(!settled){goGuest();outBtn();}},10000);
+    attach();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   setInterval(outBtn,2000);
@@ -1574,6 +1668,7 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
 </script>
 <script>
 (function(){
+if(window.__DOG_MOBILE)return;
 const $=id=>document.getElementById(id);
 const PI=Math.PI,TAU=PI*2;
 const rand=(a,b)=>a+Math.random()*(b-a);
@@ -1720,10 +1815,10 @@ const FLOORS_U={value:new THREE.Vector4(-1e4,0,-1e4,-1e4)};
 const SUN_OFF=new THREE.Vector3(-24,24,-20);
 const sunDir=SUN_OFF.clone().normalize();
 const skyMat=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,
-  uniforms:{top:{value:new THREE.Color(0.30,0.45,0.62)},hor:{value:new THREE.Color(0.86,0.80,0.71)},sd:{value:sunDir},tm:{value:0},lin:{value:0},nt:{value:0},cov:{value:.5}},
+  uniforms:{top:{value:new THREE.Color(0.30,0.45,0.62)},hor:{value:new THREE.Color(0.86,0.80,0.71)},sd:{value:sunDir},tm:{value:0},lin:{value:0},nt:{value:0},cov:{value:.5},fl:{value:0},fd:{value:new THREE.Vector3(0,1,0)},mn:{value:0},ct:{value:0}},
   vertexShader:'varying vec3 vP;void main(){vP=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
   fragmentShader:[
-   'uniform vec3 top,hor,sd;uniform float tm,lin,nt,cov;varying vec3 vP;',
+   'uniform vec3 top,hor,sd,fd;uniform float tm,lin,nt,cov,fl,mn,ct;varying vec3 vP;',
    'float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
    'float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h2(i),h2(i+vec2(1.,0.)),f.x),mix(h2(i+vec2(0.,1.)),h2(i+vec2(1.,1.)),f.x),f.y);}',
    'float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n2(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}',
@@ -1732,14 +1827,25 @@ const skyMat=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:
    ' vec3 c=mix(hor,top,pow(h,.42));float hz=exp(-h*7.);c=mix(c,hor*1.06,hz*.45);',
    ' c+=sunC*(pow(s,5.)*.16+pow(s,28.)*.24+pow(s,120.)*.3)*(1.-nt*.75)*mix(.55,1.,hz);',
    ' if(d.y>0.){vec2 uv=d.xz/(d.y+.11);float fade=smoothstep(0.,.14,d.y);',
-   '  if(nt>0.){vec2 sq=d.xz/(d.y+.35)*260.;float st=step(.9988,h2(floor(sq)));c+=vec3(.75,.8,1.)*st*(.5+.5*h2(floor(sq)+7.1))*smoothstep(.03,.3,d.y)*nt;}',
+   '  if(nt>0.){vec2 sq=d.xz/(d.y+.35)*260.;vec2 si=floor(sq);float hs=h2(si),st=step(.9984,hs),tw=.62+.38*sin(tm*(2.+hs*700.)+hs*6000.);',
+   '   vec3 sc=mix(vec3(.7,.8,1.),vec3(1.,.86,.7),h2(si+3.3));c+=sc*st*(.35+.75*h2(si+7.1))*tw*smoothstep(.03,.3,d.y)*nt;',
+   '   float mw=smoothstep(.5,0.,abs(dot(d,vec3(.497,.316,-.808))))*fbm3(d.xz*3.+d.y*2.);c+=vec3(.05,.06,.1)*mw*mw*smoothstep(.05,.4,d.y)*nt;',
+   '   float sk=floor(tm/7.),sp=fract(tm/7.)*7.;if(sp<.55){vec2 a0=(vec2(h2(vec2(sk,1.3)),h2(vec2(sk,7.7)))-.5)*1.6,dr=normalize(vec2(h2(vec2(sk,3.1))-.5,-.35-h2(vec2(sk,5.9))*.4));',
+   '    vec2 pp=d.xz/(d.y+.35)-(a0+dr*sp*1.3);float al=clamp(dot(pp,-dr),0.,.22);c+=vec3(.9,.95,1.)*smoothstep(.006,0.,length(pp+dr*al))*(1.-al/.22)*sin(sp/.55*3.14159)*.9*nt*smoothstep(.1,.3,d.y);}}',
    '  vec2 u2=uv*vec2(.5,.16)+vec2(tm*.01,tm*.003);float ci=smoothstep(.5,.9,fbm3(u2))*.3*fade*(1.-nt*.6);',
    '  c=mix(c,mix(vec3(1.,.97,.93),sunC*1.1,pow(s,3.)*.5)*(1.-nt*.85)+vec3(.02,.025,.03)*nt,ci);',
    '  vec2 u1=uv*1.2+vec2(tm*.0055,tm*.0028);float n1=fbm(u1),den=smoothstep(.62-cov*.22,.86-cov*.1,n1)*fade;',
    '  if(den>.001){float n3=fbm3(u1+sd.xz*.11),lt=clamp(.62+(n1-n3)*3.2,0.,1.);vec3 cb=mix(vec3(.5,.53,.6)*(.75+.25*h),vec3(1.,.98,.95),lt);',
    '   cb=mix(cb,cb*sunC*1.15,pow(s,3.)*.55);cb=mix(cb,vec3(.03,.035,.05)+vec3(.15,.17,.23)*pow(s,8.),nt);',
    '   c=mix(c,cb,den*(.92-nt*.2));c+=sunC*pow(s,10.)*den*(1.-den)*.9*(1.-nt);cl=den;}}',
-   ' c+=mix(vec3(1.,.86,.66),vec3(.86,.9,1.),nt)*pow(s,mix(1400.,4200.,nt))*mix(4.,5.,nt)*(1.-cl*.9);',
+   ' if(ct>.5&&d.y>.04){float pk=floor(tm/75.),pt=fract(tm/75.)*75.;if(pt<48.){float ang=h2(vec2(pk,2.2))*6.283;vec2 dr=vec2(cos(ang),sin(ang)),nr=vec2(-dr.y,dr.x);',
+   '   vec2 pp=d.xz/(d.y+.11)-(nr*(h2(vec2(pk,9.1))-.5)*3.+dr*(pt/48.*9.-4.5));float al=dot(pp,-dr),w=.011+max(al,0.)*.018;',
+   '   float ln=smoothstep(w,w*.3,abs(dot(pp,nr)))*step(0.,al)*smoothstep(3.2,0.,al);c=mix(c,vec3(1.,.98,.96),ln*.5*(1.-cl)*smoothstep(.04,.2,d.y));c+=vec3(1.)*smoothstep(.018,0.,length(pp))*.5*(1.-cl);}}',
+   ' if(mn>.5){vec3 tx=normalize(cross(sd,vec3(0.,1.,0.))),ty=cross(tx,sd);vec2 mu=vec2(dot(d,tx),dot(d,ty))/.05;float mr=dot(mu,mu),md=sqrt(mr)*.05,fr=step(0.,dot(d,sd));',
+   '  vec3 mc=vec3(.95,.96,1.)*(1.-.34*smoothstep(.42,.62,fbm3(mu*1.6+4.)))*(.55+.45*sqrt(max(1.-mr,0.)));',
+   '  c=mix(c,mc*1.5,smoothstep(1.,.92,mr)*fr*(1.-cl*.82));c+=vec3(.62,.72,1.)*(exp(-md*26.)*.4+exp(-md*9.)*.035)*fr*(1.-cl*.5);}',
+   ' else c+=mix(vec3(1.,.86,.66),vec3(.86,.9,1.),nt)*pow(s,mix(1400.,4200.,nt))*mix(4.,5.,nt)*(1.-cl*.9);',
+   ' if(fl>.002){float fg=pow(max(dot(d,fd),0.),5.);c+=vec3(.55,.63,.9)*fl*(.16+.55*cl+1.1*fg*(.4+.6*cl))*step(-.05,d.y);}',
    ' if(d.y<0.)c=mix(hor,mix(vec3(.42,.43,.38),vec3(.02,.025,.03),nt),min(-d.y*5.,1.));',
    ' c+=(h2(gl_FragCoord.xy+fract(tm*7.3))-.5)/255.;',
    ' if(lin>.5)c=pow(max(c,0.),vec3(2.2));gl_FragColor=vec4(c,1.);}'].join('\n')});
@@ -2635,7 +2741,7 @@ const MAPS={
       fence(g,mat('fenceDry',()=>std({color:C(0x8a6a44),roughness:.95})));distantTown(g,'desert');
     }},
   fjallstugan:{name:'Fjällstugan',groundK:'snow',floorK:'wood',roofK:'wood',levels:[0,3.25,6],dusty:.97,tint:[.97,1,1.04],shafts:.5,sub:'Timmerstuga i två våningar i snön',wallH:6,
-    sky:[[.55,.62,.72],[.86,.89,.93]],fog:[0xd6dde6,26,175],sun:[0xdfe8ff,1.05,[-20,18,-26]],hemi:[0xe4ecf6,0x9aa6b4,.85],exp:1.15,snow:true,
+    sky:[[.55,.62,.72],[.86,.89,.93]],fog:[0xd6dde6,26,175],sun:[0xffe7cf,1.12,[-20,18,-26]],hemi:[0xd6e3f7,0x93a3bd,.85],exp:1.15,snow:true,
     mats(){setMat(1,logT,.05);setMat(2,plankT,.02);setMat(3,stoneT,.05);setMat(9,stoneT,.05);setMat(4,plankT,.02);DEB[1]=[.45,.3,.18];DEB[2]=[.5,.36,.22];SHAPE1='splinter';},
     roofs:[{x0:14,z0:13,x1:34,z1:27,h:6}],
     spots:[[17.5,20,0],[31,20,0],[17.5,20,3.25],[31.5,20,3.25]],
@@ -2968,6 +3074,106 @@ function archDress(g,id){
   }
 }
 
+/* ---------- v44: väder — varje bana får sitt eget väder ----------
+   Kvarteret: höstlöv som singlar ner. Oasen: sand som blåser längs marken. Fjällstugan: tätt snöfall med vindbyar.
+   Hamnen: duggregn i skymningen. Slottet: åskväder med ösregn, blixtar och muller.
+   Allt räknas på grafikkortet (varje partikel får sin plats ur tiden i shadern), så det kostar ingen tid i spel-loopen.
+   Inget regnar eller snöar in under tak: samma takrutor som inomhusljuset använder. */
+const WX={kind:'',on:false,objs:{},u:{uT:{value:0},uCam:{value:new THREE.Vector3()},uGy:{value:0},uLight:{value:new THREE.Color(1,1,1)},indoorR:{value:INDOOR.rects},indoorM:{value:INDOOR.meta}},
+  fl:0,p1:0,p2:0,next:0,th:[],fd:new THREE.Vector3(0,.4,1),base:null,snd:null,dens:1};
+const WX_ROOF='uniform vec4 indoorR[8];uniform vec4 indoorM[8];float roofed(vec3 w){float h=0.;for(int i=0;i<8;i++){vec4 r=indoorR[i];vec4 m=indoorM[i];if(w.y<m.x&&w.x>r.x&&w.x<r.z&&w.z>r.y&&w.z<r.w)h=1.;}return h;}\n';
+const WX_KIND={kvarteret:'leaf',oasen:'sand',fjallstugan:'snow',hamnen:'drizzle',slottet:'storm'};
+function wxOn(){return profile.wx!==false&&gxo('fx')>=1;}
+function wxMat(o){const m=new THREE.ShaderMaterial(Object.assign({transparent:true,depthWrite:false,fog:false},o));m.uniforms=Object.assign({},WX.u,o.uniforms||{});return m;}
+function wxRand(n,box,extra){const pos=new Float32Array(n*3),r=new Float32Array(n);for(let i=0;i<n;i++){pos[i*3]=Math.random()*box[0];pos[i*3+1]=Math.random()*box[1];pos[i*3+2]=Math.random()*box[2];r[i]=Math.random();}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('aR',new THREE.BufferAttribute(r,1));if(extra)extra(g);return g;}
+function wxAdd(k,o){o.frustumCulled=false;o.visible=false;o.renderOrder=6;o.userData.noAO=true;o.userData.wxN=o.geometry.drawRange.count===Infinity?(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count):o.geometry.drawRange.count;scene.add(o);WX.objs[k]=o;return o;}
+function wxBuild(){
+  if(WX.objs.rain)return;
+  // regn: korta streck som faller snett i vinden
+  {const n=5200,box=[36,20,36],pos=new Float32Array(n*6),r=new Float32Array(n*2),e=new Float32Array(n*2);
+    for(let i=0;i<n;i++){const x=Math.random()*box[0],y=Math.random()*box[1],z=Math.random()*box[2],q=Math.random();for(let k=0;k<2;k++){pos[i*6+k*3]=x;pos[i*6+k*3+1]=y;pos[i*6+k*3+2]=z;r[i*2+k]=q;e[i*2+k]=k;}}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('aR',new THREE.BufferAttribute(r,1));g.setAttribute('aE',new THREE.BufferAttribute(e,1));
+    wxAdd('rain',new THREE.LineSegments(g,wxMat({uniforms:{uBox:{value:new THREE.Vector3(...box)},uVel:{value:new THREE.Vector3(2.4,-21,1.1)},uLen:{value:.55},uOp:{value:.34},uCol:{value:new THREE.Color(.72,.8,.95)}},
+      vertexShader:WX_ROOF+'uniform float uT,uLen,uGy;uniform vec3 uCam,uBox,uVel;attribute float aR,aE;varying float vA;void main(){vec3 v=uVel*(1.+aR*.4);vec3 c=uCam+vec3(0.,uBox.y*.28,0.);vec3 p=position+v*uT;p=mod(p-c+uBox*.5,uBox)-uBox*.5+c;'+
+        'p-=normalize(v)*uLen*(.55+aR*.9)*aE;vec4 mv=viewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;float d=length(mv.xyz);'+
+        'vA=(1.-roofed(p))*smoothstep(.5,2.4,d)*(1.-smoothstep(uBox.x*.36,uBox.x*.5,d))*mix(1.,.12,aE)*step(uGy,p.y);}',
+      fragmentShader:'uniform vec3 uCol,uLight;uniform float uOp;varying float vA;void main(){if(vA<.004)discard;gl_FragColor=vec4(uCol*uLight,vA*uOp);}'})));}
+  // plask: små ringar som slår upp på marken
+  wxAdd('splash',new THREE.Points(wxRand(900,[1,1,1]),wxMat({uniforms:{uBox:{value:new THREE.Vector3(30,1,30)},uPx:{value:900},uOp:{value:.5},uCol:{value:new THREE.Color(.8,.86,1)}},
+    vertexShader:WX_ROOF+'uniform float uT,uGy,uPx;uniform vec3 uCam,uBox;attribute float aR;varying float vA;float hh(float n){return fract(sin(n)*43758.5453);}'+
+      'void main(){float t=uT*2.7+aR*13.,cy=floor(t),ph=fract(t);vec3 p=vec3(uCam.x+(hh(cy*1.37+aR*91.7)-.5)*uBox.x,uGy+.035,uCam.z+(hh(cy*2.11+aR*47.3)-.5)*uBox.z);'+
+      'vec4 mv=viewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;float d=max(.5,-mv.z);gl_PointSize=min(60.,(.05+.22*ph)*uPx/d);vA=(1.-roofed(p+vec3(0.,.2,0.)))*(1.-ph)*(1.-smoothstep(9.,15.,d))*step(0.,-mv.z);}',
+    fragmentShader:'uniform vec3 uCol,uLight;uniform float uOp;varying float vA;void main(){vec2 q=(gl_PointCoord-.5)*vec2(2.,5.2);float r=length(q);float a=smoothstep(1.,.86,r)*smoothstep(.5,.8,r);if(a*vA<.01)discard;gl_FragColor=vec4(uCol*uLight,a*vA*uOp);}'})));
+  // snö: flingor i tre storlekar som driver i vinden, med byar
+  wxAdd('snow',new THREE.Points(wxRand(14000,[40,16,40]),wxMat({uniforms:{uBox:{value:new THREE.Vector3(40,16,40)},uPx:{value:900},uOp:{value:.92}},
+    vertexShader:WX_ROOF+'uniform float uT,uGy,uPx;uniform vec3 uCam,uBox;attribute float aR;varying float vA;'+
+      'void main(){float gust=.6+.4*sin(uT*.23+aR*.5)+.25*sin(uT*.71);vec3 v=vec3(1.5*gust+.4,-(1.05+aR*1.1),.55*gust);vec3 c=uCam+vec3(0.,uBox.y*.3,0.);vec3 p=position+v*uT;'+
+      'p.x+=sin(uT*.9+aR*40.)*.28;p.z+=cos(uT*.7+aR*31.)*.28;p=mod(p-c+uBox*.5,uBox)-uBox*.5+c;vec4 mv=viewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;float d=max(.3,length(mv.xyz));'+
+      'gl_PointSize=clamp((.06+.1*fract(aR*7.))*uPx/d,2.,34.);vA=(1.-roofed(p))*smoothstep(.3,1.2,d)*(1.-smoothstep(uBox.x*.36,uBox.x*.5,d))*step(uGy,p.y);}',
+    fragmentShader:'uniform vec3 uLight;uniform float uOp;varying float vA;void main(){float r=length(gl_PointCoord-.5)*2.;float a=smoothstep(1.,.25,r);if(a*vA<.01)discard;gl_FragColor=vec4(vec3(.97,.98,1.)*uLight,a*vA*uOp);}'})));
+  // löv: singlar ner, vänder sig och byter sida
+  wxAdd('leaf',new THREE.Points(wxRand(1100,[34,12,34]),wxMat({uniforms:{uBox:{value:new THREE.Vector3(34,12,34)},uPx:{value:900},uOp:{value:1}},
+    vertexShader:WX_ROOF+'uniform float uT,uGy,uPx;uniform vec3 uCam,uBox;attribute float aR;varying float vA,vR;varying vec3 vC;'+
+      'void main(){vec3 v=vec3(.95,-(.55+aR*.5),.4);vec3 c=uCam+vec3(0.,uBox.y*.32,0.);vec3 p=position+v*uT;p.x+=sin(uT*1.1+aR*50.)*.7;p.z+=cos(uT*.8+aR*33.)*.6;p.y+=sin(uT*2.1+aR*70.)*.12;'+
+      'p=mod(p-c+uBox*.5,uBox)-uBox*.5+c;vec4 mv=viewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;float d=max(.4,length(mv.xyz));gl_PointSize=clamp((.2+.14*fract(aR*5.))*uPx/d,3.,64.);'+
+      'vR=uT*(1.6+aR*2.2)+aR*60.;float h=fract(aR*3.7);vC=h<.4?mix(vec3(.9,.42,.06),vec3(.98,.68,.1),h/.4):h<.75?mix(vec3(.98,.68,.1),vec3(.72,.2,.05),(h-.4)/.35):vec3(.5,.3,.1);'+
+      'vA=(1.-roofed(p))*smoothstep(.5,1.6,d)*(1.-smoothstep(uBox.x*.36,uBox.x*.5,d))*step(uGy+.02,p.y);}',
+    fragmentShader:'uniform vec3 uLight;varying float vA,vR;varying vec3 vC;void main(){vec2 q=gl_PointCoord-.5;float cs=cos(vR),sn=sin(vR);q=vec2(q.x*cs-q.y*sn,q.x*sn+q.y*cs);q.y/=max(.22,abs(sin(vR*.63)));'+
+      'float a=1.-smoothstep(.2,.24,length(q*vec2(1.,1.9))+abs(q.x)*.5);if(a*vA<.05)discard;float rib=1.-.25*smoothstep(.012,0.,abs(q.y));gl_FragColor=vec4(vC*rib*(.75+.25*sin(vR*.63))*uLight,a*vA);}'})));
+  // sand: korn som far längs marken i byar
+  wxAdd('sand',new THREE.Points(wxRand(1500,[40,2.4,40]),wxMat({uniforms:{uBox:{value:new THREE.Vector3(40,2.4,40)},uPx:{value:900},uOp:{value:.5}},
+    vertexShader:WX_ROOF+'uniform float uT,uGy,uPx;uniform vec3 uCam,uBox;attribute float aR;varying float vA;'+
+      'void main(){float gust=.55+.45*sin(uT*.31+position.x*.05);vec3 v=vec3(5.5+aR*3.,0.,1.8+aR);vec3 p=position+v*uT;p.y=position.y*position.y/uBox.y+sin(uT*3.+aR*60.)*.06;'+
+      'vec3 c=vec3(uCam.x,0.,uCam.z);p.xz=mod(p.xz-c.xz+uBox.xz*.5,uBox.xz)-uBox.xz*.5+c.xz;p.y+=uGy+.03;vec4 mv=viewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;float d=max(.4,length(mv.xyz));'+
+      'gl_PointSize=clamp((.03+.05*fract(aR*9.))*uPx/d,1.,14.);vA=(1.-roofed(p))*gust*smoothstep(.6,2.,d)*(1.-smoothstep(uBox.x*.34,uBox.x*.5,d))*(1.-smoothstep(1.2,2.3,p.y-uGy));}',
+    fragmentShader:'uniform vec3 uLight;uniform float uOp;varying float vA;void main(){vec2 q=(gl_PointCoord-.5)*vec2(1.,2.4);float a=smoothstep(.5,.1,length(q));if(a*vA<.01)discard;gl_FragColor=vec4(vec3(.93,.78,.55)*uLight,a*vA*uOp);}'})));
+}
+// körs när en bana laddats och när inställningarna ändras
+function wxApply(){
+  const on=wxOn()&&!!MAP&&!MAP.range,kind=on?(WX_KIND[curMap]||''):'';WX.kind=kind;WX.on=!!kind;
+  WX.base={sunI:sun.intensity,hemiI:hemi.intensity,sunC:sun.color.clone(),fog:scene.fog.color.clone()};WX.fl=WX.p1=WX.p2=0;WX.th.length=0;WX.next=T+rand(6,12);
+  skyMat.uniforms.fl.value=0;skyMat.uniforms.mn.value=MAP&&MAP.night?1:0;skyMat.uniforms.ct.value=MAP&&!MAP.night&&!MAP.dark&&!MAP.snow&&curMap!=='hamnen'?1:0;
+  if(kind)wxBuild();const O=WX.objs;if(!O.rain){if(snowFx)snowFx.visible=true;return;}
+  WX.dens=gxo('fx')>=2?1:.7;
+  const rainy=kind==='storm'||kind==='drizzle';
+  O.rain.visible=rainy;O.splash.visible=rainy;O.snow.visible=kind==='snow';O.leaf.visible=kind==='leaf';O.sand.visible=kind==='sand';
+  if(snowFx)snowFx.visible=kind!=='snow';
+  if(rainy){const st=kind==='storm',k=st?1:.7;O.rain.material.uniforms.uOp.value=st?.36:.42;O.rain.material.uniforms.uVel.value.set(st?3.2:1.3,st?-22:-17,st?1.4:.6);O.rain.material.uniforms.uLen.value=st?.6:.4;
+    O.rain.geometry.setDrawRange(0,Math.floor(O.rain.userData.wxN*k*WX.dens/2)*2);O.splash.geometry.setDrawRange(0,Math.floor(O.splash.userData.wxN*k*WX.dens));O.splash.material.uniforms.uOp.value=st?.5:.45;}
+  for(const k of ['snow','leaf','sand'])O[k].geometry.setDrawRange(0,Math.floor(O[k].userData.wxN*WX.dens));
+  // partiklarna färgas av banans ljus så att de smälter in (mörka på natten, varma i kvällssol)
+  const L=WX.u.uLight.value;L.copy(hemi.color).multiplyScalar(hemi.intensity*.55).add(sun.color.clone().multiplyScalar(sun.intensity*.3));const mx=Math.max(L.r,L.g,L.b);if(mx>1.25)L.multiplyScalar(1.25/mx);if(MAP&&MAP.night)L.multiplyScalar(1.5);{const lm=Math.max(L.r,L.g,L.b),fl=MAP&&MAP.night?.3:.62;if(lm<fl)L.lerp(_wxC.setRGB(fl,fl,fl*1.05),1-lm/fl);}
+  WX.u.uGy.value=(MAP&&MAP.gl||0);
+}
+function wxBoltOk(){if(profile.bolt===false)return false;if(profile.bolt===true)return true;try{return !matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return true;}}
+function wxSound(dt){
+  const want=WX.on&&state==='game'&&!paused&&(WX.kind==='storm'||WX.kind==='drizzle');
+  if(!AC||(!want&&!WX.snd))return;
+  try{if(!WX.snd){const s=AC.createBufferSource();s.buffer=noiseBuf;s.loop=true;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=3200;const h=AC.createBiquadFilter();h.type='highpass';h.frequency.value=350;
+      const g=AC.createGain();g.gain.value=0;s.connect(h);h.connect(f);f.connect(g);g.connect(master);s.start();WX.snd={s,f,g};}
+    const ind=want?indoorAt(camera.position.x,camera.position.y,camera.position.z):0,t=AC.currentTime;
+    WX.snd.g.gain.setTargetAtTime(want?(WX.kind==='storm'?.085:.035)*(1-.55*ind):0,t,.35);WX.snd.f.frequency.setTargetAtTime(ind>.5?650:3200,t,.3);}catch(e){}
+}
+function wxTick(dt,t){
+  WX.u.uT.value=t%600;WX.u.uCam.value.copy(camera.position);
+  const px=renderer.domElement.height*.5/Math.tan(camera.fov*PI/360);for(const k of ['splash','snow','leaf','sand']){const o=WX.objs[k];if(o&&o.visible)o.material.uniforms.uPx.value=px;}
+  wxSound(dt);
+  // åska: en blixt (två korta sken) med mellanrum, mullret kommer en stund efter
+  const B=WX.base;if(!B)return;
+  if(WX.kind==='storm'&&state==='game'){
+    if(t>WX.next&&wxBoltOk()){WX.next=t+rand(11,26);WX.p1=1;WX.p2=-.16-Math.random()*.1;const a=Math.random()*TAU;WX.fd.set(Math.cos(a),.28+Math.random()*.3,Math.sin(a)).normalize();
+      const far=Math.random();WX.th.push({t:t+.5+far*2.2,v:1-far*.55});}
+    for(let i=WX.th.length-1;i>=0;i--)if(t>=WX.th[i].t){const v=WX.th[i].v;WX.th.splice(i,1);if(!paused){nz(2.8+Math.random(),170,'lowpass',.85*v,38,.7);tn(52,2.4,.42*v,'sine',26);if(v>.75)nz(.3,2600,'highpass',.16*v,900,1);nz(1.6,90,'lowpass',.5*v,30,.8);}}
+  }
+  if(WX.p2<0){WX.p2+=dt;if(WX.p2>=0)WX.p2=.62;}
+  WX.p1*=Math.exp(-dt*15);if(WX.p2>0)WX.p2*=Math.exp(-dt*11);
+  const fl=Math.min(1,Math.max(WX.p1,WX.p2>0?WX.p2:0));
+  if(fl>.003||WX.fl>0){WX.fl=fl>.003?fl:0;const k=WX.fl;sun.intensity=B.sunI*(1+k*4.2);hemi.intensity=B.hemiI*(1+k*2.6);scene.fog.color.copy(B.fog).lerp(_wxC.setRGB(.5,.56,.72),k*.5);
+    skyMat.uniforms.fl.value=k;skyMat.uniforms.fd.value.copy(WX.fd);}
+}
+const _wxC=new THREE.Color();
+
 function loadMap(id){
   const M=MAPS[id];if(!M)return;
   if(mapGroup)scene.remove(mapGroup);
@@ -2983,14 +3189,14 @@ function loadMap(id){
   addSolids=first;buildLevel();addSolids=false;makeBlockMesh();
   if(first){M.decor(grp);try{archDress(grp,id);}catch(e){console.warn('arch',e);}grp.userData.lights=extractLights(grp);batchStatic(grp);}
   MAPL=grp.userData.lights||[];skyMat.uniforms.cov.value=({kvarteret:.5,oasen:.24,fjallstugan:.78,hamnen:.6,slottet:.45,skjutbana:.42})[id]??.5;applyAtmo();applyWet();mapEnv(id,M);setIndoor(M);try{volLights();}catch(e){console.warn('vol',e);}
-  grass=grp.userData.grass||null;snowFx=grp.userData.snow||null;try{applyTexQ();}catch(e){}warmShaders();
+  grass=grp.userData.grass||null;snowFx=grp.userData.snow||null;try{wxApply();}catch(e){console.warn('väder',e);}try{applyTexQ();}catch(e){}warmShaders();
   if(grass){grass.root.visible=true;grassQ();}
   clearEffects();
   if(G.mode==='train')resetBots();
 }
 function updateMapFx(dt,t){
-  updateGrass(dt);
-  if(snowFx){const a=snowFx.geometry.attributes.position.array,cx=camera.position.x,cz=camera.position.z;
+  updateGrass(dt);try{wxTick(dt,t);}catch(e){}
+  if(snowFx&&snowFx.visible){const a=snowFx.geometry.attributes.position.array,cx=camera.position.x,cz=camera.position.z;
     for(let i=0;i<a.length;i+=3){a[i+1]-=dt*(.8+(i%7)*.08);a[i]+=Math.sin(t*.7+i)*dt*.25;
       if(a[i+1]<0){a[i+1]=14;a[i]=cx+rand(-30,30);a[i+2]=cz+rand(-30,30);}
       if(a[i]-cx>30)a[i]-=60;else if(cx-a[i]>30)a[i]+=60;if(a[i+2]-cz>30)a[i+2]-=60;else if(cz-a[i+2]>30)a[i+2]+=60;}
@@ -6400,7 +6606,7 @@ function saveProfile(){
   if(NET.on){const body={money:profile.money|0,owned:profile.owned.slice(0,200),guns:profile.guns.slice(0,20),primary:profile.primary,skinFor:profile.skinFor,sights:profile.sights.slice(0,20),sightFor:profile.sightFor,attOwned:profile.attOwned.slice(0,20),attFor:profile.attFor,range:profile.range,rangeBest:profile.rangeBest,packInv:profile.packInv,codes:profile.codes.slice(0,50),q:profile.q||null,lt:profile.lt||null,ev:profile.ev||null,sp:profile.sp||null,dr:profile.dr||null};
     saveChain=saveChain.then(()=>NET.db.doc(privPath()).set(body)).catch(()=>{});}
 }
-function addMoney(n){if(!n)return 0;n=Math.round(n*.5);if(G.mode==='train')n=Math.round(n/2);profile.money=(profile.money|0)+n;stats.earned+=n;saveProfile();return n;}
+function addMoney(n){if(!n)return 0;n=Math.round(n*.5);if(G.mode==='train')n=Math.round(n/2);profile.money=(profile.money|0)+n;if(NET.full)profile.offM=(profile.offM|0)+n;stats.earned+=n;saveProfile();return n;}
 const SHOP={gun:null};
 function renderShop(){
   $('wallet').textContent=(profile.money|0)+' kr';
@@ -6505,7 +6711,7 @@ function onResize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=inner
   if(composer){composer.setPixelRatio(renderer.getPixelRatio());composer.setSize(innerWidth,innerHeight);setFxaaRes();}}
 let basePR=1,dynScale=1;
 function applyPost(q){const dpr=window.devicePixelRatio||1;basePR=profile.perf?Math.min(dpr,1)*Math.min(.75,clamp(+profile.rs||1,.5,1)):(q===0?Math.min(dpr,1.25):q===1?Math.min(dpr,1.5):q===2?Math.min(dpr,1.5):Math.min(dpr,2))*clamp(+profile.rs||1,.5,1);
-  renderer.setPixelRatio(basePR*dynScale);setupPost(q);postOn=!!composer;
+  renderer.setPixelRatio(basePR*dynScale);setupPost(q);postOn=!!composer;if(WARM)WARM.req=true;
   skyMat.uniforms.lin.value=postOn?1:0;
   if(grass)grassQ();
   applyFx();applyTexQ();
@@ -6530,7 +6736,7 @@ function draw(sc,cam){sc=sc||scene;cam=cam||camera;const _hf=FOGU.p[3];if(sc!==s
     if(bokehPass){bokehPass.enabled=lob;if(lob)bokehPass.uniforms.aspect.value=cam.aspect;}
     updateGradeU(lob);composer.render();}
   else renderer.render(sc,cam);FOGU.p[3]=_hf;TORCHU.p[3]=0;WETU.p[3]=0;}
-function shadowsOnly(q){const sq=gxo('sh'),so=sq>0;
+function shadowsOnly(q){if(WARM)WARM.req=true;const sq=gxo('sh'),so=sq>0;
   renderer.shadowMap.enabled=so;sun.castShadow=so;torchShadowQ(sq);
   renderer.shadowMap.type=sq>=3?THREE.PCFSoftShadowMap:THREE.PCFShadowMap;sun.shadow.radius=sq===2?2.5:1.5;
   const ss=[512,1024,2048,4096,4096][sq]||2048;sun.shadow.mapSize.set(ss,ss);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}fitSunShadow();
@@ -6816,7 +7022,8 @@ function hurtBot(e,dmg,head,direct){
     feedLine(profile.name||'Du',P.team,e.name,'B',head,m);sfx.kill();hud.hitm.classList.add('kill');hitT=.25;onMyKill({x:e.x,y:e.fy||0,z:e.z,head:!!head,direct:!!direct,victim:e});}
   else if(direct){sfx.hit();hud.hitm.classList.remove('kill');hitT=.12;}
 }
-function warmShaders(){const hid=[];const walk=o=>{if(o===vm)return;if(!o.visible){hid.push(o);o.visible=true;}for(const c of o.children)walk(c);};try{walk(scene);renderer.compile(scene,camera);}catch(e){}for(const o of hid)o.visible=false;}
+function warmShaders(){if(/[?&]nowarm/.test(location.search)){const hid=[];const walk=o=>{if(o===vm)return;if(!o.visible){hid.push(o);o.visible=true;}for(const c of o.children)walk(c);};try{walk(scene);renderer.compile(scene,camera);}catch(e){}for(const o of hid)o.visible=false;return;}
+  if(WARM)WARM.req=true;}
 function freeSpot(x0,z0,y0){for(let r=.25;r<=4;r+=.25)for(let a=0;a<16;a++){const x=x0+Math.cos(a*PI/8)*r,z=z0+Math.sin(a*PI/8)*r;if(x<.4||z<.4||x>MW()-.4||z>MD()-.4)continue;
   const y=groundAt(x,z,y0+.6);if(y>y0+.65)continue;if(!collides(x,z,.3,y)&&y+1.85<roofAt(x,z))return[x,z,y];}return null;}
 function pathClear(x0,z0,x1,z1,y){const d=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.ceil(d/.25));let yy=y||0;for(let i=1;i<=n;i++){const f=i/n,x=x0+(x1-x0)*f,z=z0+(z1-z0)*f;if(collides(x,z,.3,yy))return false;const g=groundAt(x,z,yy);if(g<yy-.4)return false;yy=g;}return true;}
@@ -6897,7 +7104,7 @@ const remotes=new Map();
 function makeRemote(peer,pr){
   const team=pr.tm==='B'?'B':'A';const sk=SKINS.some(s=>s.id===pr.sk)?pr.sk:'std';
   const wg0=GUNS[pr.wg]?pr.wg:'k9';const s=buildSoldier(team,remoteSkinMat(sk,wg0));s.setGun(null,GUNS[wg0].len);
-  const name=String(pr.n||'Spelare').slice(0,16);
+  const name=safeNm(pr.n);
   const tag=nameTag(name,team,team===P.team);tag.position.y=2.1;s.g.add(tag);
   const r=Object.assign(s,{kind:'net',peer,team,name,sk,wg:wg0,tag,x:0,z:0,eye:1.62,yaw:0,pitch:0,tx:0,tz:0,tyaw:0,first:true,alive:true,cr:false,hp:100,cl:0,k:0,d:0,pg:null,r:0,
     lastShot:null,hitSeen:new Set(),evSeen:new Set(),ddSeen:null,stepAcc:0,nades:[],flT:0});
@@ -6907,7 +7114,7 @@ function removeRemote(r){scene.remove(r.g);r.nades.forEach(m=>scene.remove(m));}
 function clearRemotes(){for(const r of remotes.values())removeRemote(r);remotes.clear();}
 function updateRemote(r,pr,peer,dt){
   const team=pr.tm==='B'?'B':'A';
-  const nm=String(pr.n||'Spelare').slice(0,16);
+  const nm=safeNm(pr.n);
   if(team!==r.team||nm!==r.name){r.g.remove(r.tag);r.team=team;r.name=nm;r.tag=nameTag(nm,team,team===P.team);r.tag.position.y=2.1;r.g.add(r.tag);}
   const p=pr.p;const x=+p[0]||0,eye=+p[1]||1.62,z=+p[2]||0,yaw=+p[3]||0,pitch=+p[4]||0;
   if(r.first){r.x=x;r.z=z;r.yaw=yaw;r.first=false;}
@@ -7052,12 +7259,13 @@ function annPickVoice(){
 }
 try{if(window.speechSynthesis){speechSynthesis.addEventListener('voiceschanged',()=>{ANN.voice=null;});}}catch(e){}
 function annSay(text,o){
-  o=o||{};const ss=window.speechSynthesis;if(!ss||profile.announcer===false)return false;
+  o=o||{};const ss=window.speechSynthesis;if(!ss||profile.announcer===false||profile.annVoice===false)return false;
   if(!ANN.voice||ANN.lang!==LANG){ANN.voice=annPickVoice();ANN.lang=LANG;}
-  try{ss.cancel();const u=new SpeechSynthesisUtterance(text);if(ANN.voice){try{u.voice=ANN.voice;}catch(e){}u.lang=ANN.voice.lang;}else u.lang=LANG==='sv'?'sv-SE':'en-US';
+  try{if(ss.speaking||ss.pending){const stuck=performance.now()-(ANN.sayT||0)>14000;if(stuck){try{ss.cancel();}catch(e){}ANN.sayT=performance.now();}if(o.skip||stuck)return false;}
+    const u=new SpeechSynthesisUtterance(text);if(ANN.voice){try{u.voice=ANN.voice;}catch(e){}u.lang=ANN.voice.lang;}else u.lang=LANG==='sv'?'sv-SE':'en-US';
     const nat=ANN.voice&&/Natural|Online/i.test(ANN.voice.name);
     u.pitch=o.pitch!=null?o.pitch:(nat?.8:.45);u.rate=o.rate!=null?o.rate:(nat?.92:.82);u.volume=clamp(volMain()*volSfx()*1.15,0,1);
-    ss.speak(u);ANN.n++;ANN.lastText=text;return true;}catch(e){return false;}
+    bb('say');ANN.sayT=performance.now();ss.speak(u);ANN.n++;ANN.lastText=text;return true;}catch(e){return false;}
 }
 // filmisk smäll: djup sub-trumma + metallisk klang + lång efterklang
 function annHit(big){
@@ -7080,7 +7288,7 @@ function annLines(){
 function announce(ph){
   if(state!=='game'||G.mode==='range'||!G.mode)return;const now=performance.now();
   if(ph==='prep'){if(now-ANN.last<2500)return;ANN.last=now;const [a,b]=annLines();annHit(true);setTimeout(()=>annSay(a+' '+b),260);}
-  else if(ph==='live'){setTimeout(()=>{if(G.ph!=='live')return;annRiser();setTimeout(()=>{annHit(false);annSay(LANG==='sv'?'Kör!':'Fight!',{rate:.9});},350);},Math.max(0,PROT_T*1000-650));}
+  else if(ph==='live'){setTimeout(()=>{if(G.ph!=='live')return;annRiser();setTimeout(()=>{annHit(false);annSay(LANG==='sv'?'Kör!':'Fight!',{rate:.9,skip:true});},350);},Math.max(0,PROT_T*1000-650));}
 }
 
 // avgörs rundan just nu? (förutsägelse direkt hos den som dog och den som vann, innan värden hinner skicka resultatet)
@@ -7139,6 +7347,7 @@ function quitGame(){
 /* ---------- nätverk: profil, namn, vänner, party, matchmaking ---------- */
 const NET={on:false,db:null,room:null,user:null,uid:null,peer:null,lobby:[],ping:null,why:'',friendsReady:false};
 const privPath=()=>'data/users/'+NET.uid+'/profile';
+const safeNm=(n,d)=>{n=String(n||'').slice(0,16);return !n||(window.DOG_BADNAME&&window.DOG_BADNAME(n))?(d||'Spelare'):n;};
 async function netInit(){
   let tries=0;while(!(window.claude&&typeof window.claude.use==='function')&&tries<30){await sleep(100);tries++;}
   if(!(window.claude&&typeof window.claude.use==='function')){NET.why='Multiplayer fungerar bara när spelet är öppnat på claude.ai.';return;}
@@ -7146,10 +7355,13 @@ async function netInit(){
   try{[db,room,user]=await Promise.all(['db','room','user'].map(n=>Promise.resolve(window.claude.use(n)).catch(()=>null)));}catch(e){}
   NET.db=db;NET.room=room;NET.user=user;
   if(user){try{NET.uid=await user.id();}catch(e){}}
-  if(!db||!room||!NET.uid){NET.why=window.DOGLERS_FB?L('Logga in för att spela multiplayer och lägga till vänner. Ladda om sidan för att logga in.','Sign in to play multiplayer and add friends. Reload the page to sign in.'):'Multiplayer kräver att du är inloggad och att ägaren har delat spelet med dig som Redigerare.';return;}
+  if(!db||!room||!NET.uid){NET.why=window.DOGLERS_FB?L('Du spelar som gäst. Skapa ett gratis konto för att möta riktiga spelare, spela med kompisar och spara dina saker.','You\'re playing as a guest. Create a free account to play real players, team up with friends and keep your stuff.'):'Multiplayer kräver att du är inloggad och att ägaren har delat spelet med dig som Redigerare.';return;}
   NET.on=true;
+  // servern får aldrig låsa starten: svarar den inte på tio sekunder (full eller nere) spelar man mot bottar så länge
+  const tmo=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))]);
+  try{await tmo(db.doc(privPath()).get(),10000);}catch(e){if(e&&e.message==='timeout'){NET.on=false;NET.full=true;NET.why=L('Servern svarar inte just nu (den kan vara full). Du kan spela mot bottar så länge. Ladda om sidan om en stund för att spela online.','The server isn\'t answering right now (it may be full). You can play bots meanwhile. Reload the page in a while to play online.');return;}}
   try{const ps=await db.doc(privPath()).get();
-    if(ps.exists){const d=ps.data()||{};profile.money=Math.max(0,d.money|0);profile.owned=Array.isArray(d.owned)&&d.owned.length?d.owned.filter(x=>typeof x==='string').slice(0,200):['std'];if(!profile.owned.includes('std'))profile.owned.unshift('std');if(Array.isArray(d.guns))profile.guns=d.guns.filter(x=>GUNS[x]);if(GUNS[d.primary]&&!GUNS[d.primary].side)profile.primary=d.primary;if(d.skinFor&&typeof d.skinFor==='object')profile.skinFor=Object.assign({},d.skinFor);else if(d.skin)profile.skinFor={k9:d.skin,m2:d.skin};if(Array.isArray(d.sights))profile.sights=d.sights.filter(x=>typeof x==='string');if(d.sightFor&&typeof d.sightFor==='object')profile.sightFor=Object.assign({},d.sightFor);if(Array.isArray(d.attOwned))profile.attOwned=d.attOwned.filter(x=>typeof x==='string').slice(0,20);if(d.attFor&&typeof d.attFor==='object')profile.attFor=Object.assign({},d.attFor);if(d.range&&typeof d.range==='object')profile.range=Object.assign({},profile.range,d.range);if(d.rangeBest&&typeof d.rangeBest==='object'){if(!profile.rangeBest||typeof profile.rangeBest!=='object')profile.rangeBest={};for(const k in d.rangeBest)profile.rangeBest[k]=Math.max(profile.rangeBest[k]|0,d.rangeBest[k]|0);}if(Array.isArray(d.codes)){const cs=new Set((profile.codes||[]).concat(d.codes.filter(x=>typeof x==='string')));profile.codes=[...cs];}if(d.packInv&&typeof d.packInv==='object'&&!Array.isArray(d.packInv))profile.packInv=Object.assign({},d.packInv);for(const k of ['q','lt','ev','sp','dr'])if(d[k]&&typeof d[k]==='object'&&!Array.isArray(d[k]))profile[k]=JSON.parse(JSON.stringify(d[k]));fixProfile();applySights();applyAtts();if(!profile.guns.includes(profile.primary))profile.primary='k9';applySkins();}
+    if(ps.exists){const d=ps.data()||{};profile.money=Math.max(0,d.money|0);profile.owned=Array.isArray(d.owned)&&d.owned.length?d.owned.filter(x=>typeof x==='string').slice(0,200):['std'];if(!profile.owned.includes('std'))profile.owned.unshift('std');if(Array.isArray(d.guns))profile.guns=d.guns.filter(x=>GUNS[x]);if(GUNS[d.primary]&&!GUNS[d.primary].side)profile.primary=d.primary;if(d.skinFor&&typeof d.skinFor==='object')profile.skinFor=Object.assign({},d.skinFor);else if(d.skin)profile.skinFor={k9:d.skin,m2:d.skin};if(Array.isArray(d.sights))profile.sights=d.sights.filter(x=>typeof x==='string');if(d.sightFor&&typeof d.sightFor==='object')profile.sightFor=Object.assign({},d.sightFor);if(Array.isArray(d.attOwned))profile.attOwned=d.attOwned.filter(x=>typeof x==='string').slice(0,20);if(d.attFor&&typeof d.attFor==='object')profile.attFor=Object.assign({},d.attFor);if(d.range&&typeof d.range==='object')profile.range=Object.assign({},profile.range,d.range);if(d.rangeBest&&typeof d.rangeBest==='object'){if(!profile.rangeBest||typeof profile.rangeBest!=='object')profile.rangeBest={};for(const k in d.rangeBest)profile.rangeBest[k]=Math.max(profile.rangeBest[k]|0,d.rangeBest[k]|0);}if(Array.isArray(d.codes)){const cs=new Set((profile.codes||[]).concat(d.codes.filter(x=>typeof x==='string')));profile.codes=[...cs];}if(d.packInv&&typeof d.packInv==='object'&&!Array.isArray(d.packInv))profile.packInv=Object.assign({},d.packInv);for(const k of ['q','lt','ev','sp','dr'])if(d[k]&&typeof d[k]==='object'&&!Array.isArray(d[k]))profile[k]=JSON.parse(JSON.stringify(d[k]));if(profile.offM>0){profile.money+=profile.offM|0;}profile.offM=0;fixProfile();applySights();applyAtts();if(!profile.guns.includes(profile.primary))profile.primary='k9';applySkins();saveProfile();}
     else saveProfile();}catch(e){}
   try{const pl=await db.doc('players/'+NET.uid).get();if(pl.exists&&pl.data().name&&NAME_RE.test(pl.data().name))profile.name=pl.data().name;else profile.nameClaimed=false;}catch(e){}
   room.onPeers(ch=>{NET.lobby=ch.peers;const me=ch.peers.find(p=>p.sameTab);if(me)NET.peer=me.peer;onLobby();},()=>{});
@@ -7160,6 +7372,7 @@ async function netInit(){
 async function claimName(raw){
   const name=raw.trim();
   if(!NAME_RE.test(name))return'Använd 3–16 tecken: A–Z, siffror, _ eller -.';
+  if(window.DOG_BADNAME&&window.DOG_BADNAME(name))return L('Det namnet går inte att använda. Välj ett annat.','That name can\'t be used. Pick another one.');
   if(!NET.on){profile.name=name;saveProfile();return null;}
   const key=name.toLowerCase(),db=NET.db;
   try{
@@ -7192,7 +7405,7 @@ function resolveNames(){
   for(const id of ids){if(FR.names[id]||nameLoading.has(id))continue;nameLoading.add(id);
     NET.db.doc('players/'+id).get().then(s=>{if(s.exists&&typeof s.data().name==='string')FR.names[id]=s.data().name.slice(0,16);renderFriends();renderParty();}).catch(()=>{}).finally(()=>nameLoading.delete(id));}
 }
-const fname=id=>FR.names[id]||'Spelare';
+const fname=id=>safeNm(FR.names[id]);
 async function sendFriendReq(raw){
   const name=raw.trim();if(!NAME_RE.test(name))return['Skriv ett giltigt namn.',true];
   if(!NET.on)return[NET.why,true];
@@ -7248,8 +7461,8 @@ const seenInv=new Set();
 function onLobby(){
   for(const p of NET.lobby){if(p.sameTab||!p.presence||!Array.isArray(p.presence.inv))continue;
     for(const x of p.presence.inv){if(!x||x.to!==NET.uid||typeof x.p!=='string'||x.p===PARTY.id)continue;const k=p.peer+':'+x.i;if(seenInv.has(k))continue;seenInv.add(k);
-      if(typeof p.presence.u==='string'&&typeof p.presence.n==='string')FR.names[p.presence.u]=p.presence.n.slice(0,16);
-      inviteToast(String(p.presence.n||'En vän').slice(0,16),x.p);}}
+      if(typeof p.presence.u==='string'&&typeof p.presence.n==='string')FR.names[p.presence.u]=safeNm(p.presence.n);
+      inviteToast(safeNm(p.presence.n,'En vän'),x.p);}}
   if(state==='menu'){renderFriends();}
   queueTick();
 }
@@ -7495,7 +7708,7 @@ function partyMembers(){
   const out=[],seen=new Set();
   for(const p of PARTY.peers){const pr=p.presence;if(!pr||typeof pr.u!=='string')continue;if(seen.has(pr.u)&&!p.sameTab)continue;
     if(seen.has(pr.u)){const i=out.findIndex(m=>m.u===pr.u);out.splice(i,1);}seen.add(pr.u);
-    out.push({peer:p.peer,u:pr.u,n:String(pr.n||'Spelare').slice(0,16),j:+pr.j||0,me:p.sameTab,go:pr.go});}
+    out.push({peer:p.peer,u:pr.u,n:safeNm(pr.n),j:+pr.j||0,me:p.sameTab,go:pr.go});}
   if(!out.some(m=>m.me)&&NET.uid)out.push({peer:NET.peer,u:NET.uid,n:profile.name,j:PARTY.j,me:true,go:PARTY.go});
   out.sort((a,b)=>a.j-b.j||a.u.localeCompare(b.u));return out;
 }
@@ -7512,7 +7725,16 @@ function onParty(){
 function pickTeams(mem){const t={};mem.forEach((m,i)=>{t[m.u]=PARTY.pick[m.u]||(i%2?'B':'A');});return t;}
 function renderParty(){
   const list=$('partyList');list.textContent='';
-  if(!NET.on){$('partyCard').hidden=true;$('queueBtn').disabled=true;const n=$('mpNote');n.hidden=false;n.textContent=NET.why||'Multiplayer är inte tillgängligt.';lobbySync(null);return;}
+  if(!NET.on){$('partyCard').hidden=true;const n=$('mpNote'),qb=$('queueBtn'),tb=$('trainBtn');n.hidden=false;
+    if(isGuest()){qb.disabled=false;
+      if(!n.dataset.g){n.dataset.g='1';qb.classList.remove('main');tb.classList.add('main');tb.style.order='-1';
+        $('queueLbl').textContent='Spela online';qb.querySelector('small').textContent='Gratis konto · möt riktiga spelare';
+        tb.querySelector('b').textContent='Spela nu';tb.querySelector('small').textContent='Match mot fem bottar · ger pengar';
+        n.classList.add('guest');n.textContent='';const t=document.createElement('span');t.textContent=NET.why||'';const row=document.createElement('span');row.className='gRow';
+        const b1=document.createElement('button');b1.type='button';b1.className='btn small';b1.textContent='Skapa konto';b1.onclick=()=>window.DOGLERS_FB.login('new');
+        const b2=document.createElement('button');b2.type='button';b2.className='link';b2.textContent='Logga in';b2.onclick=()=>window.DOGLERS_FB.login('in');row.append(b1,b2);n.append(t,row);}}
+    else{qb.disabled=true;n.textContent=NET.why||'Multiplayer är inte tillgängligt.';}
+    lobbySync(null);return;}
   $('partyCard').hidden=false;$('mpNote').hidden=true;
   const mem=partyMembers(),lead=isLeader(),teams=pickTeams(mem);
   for(const [i,m] of mem.entries()){const li=document.createElement('li');
@@ -7522,12 +7744,16 @@ function renderParty(){
     if(mem.length>1){const tb=document.createElement('button');tb.type='button';tb.className='teamPick '+teams[m.u];tb.textContent=teams[m.u]==='A'?'ROST':'FROST';tb.disabled=!lead;
       tb.title=lead?'Byt lag för internmatch':'Ledaren väljer lag';tb.onclick=()=>{PARTY.pick[m.u]=teams[m.u]==='A'?'B':'A';renderParty();};li.appendChild(tb);}
     list.appendChild(li);}
-  $('partyInfo').textContent=mem.length+' av 5 · bjud in vänner under Vänner';
+  {const on=new Set(NET.lobby.map(p=>p.presence&&p.presence.u).filter(u=>typeof u==='string')).size;
+   $('partyInfo').textContent=mem.length+' av 5 · bjud in vänner under Vänner'+(on>1?L(' · '+on+' spelare online',' · '+on+' players online'):'');}
   const qb=$('queueBtn'),ib=$('internBtn'),lb=$('leavePartyBtn');
   qb.disabled=!lead;ib.disabled=!lead||mem.length<2;lb.hidden=mem.length<2;
   $('queueLbl').textContent=LOB.q?'Avbryt sökning':'Sök match';lobbySync(mem);
   const st=$('partyStatus');
-  if(LOB.q){const s=Math.floor((Date.now()-LOB.q.t)/1000);st.textContent='Söker ett annat party att möta… '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+  if(LOB.q){const s=Math.floor((Date.now()-LOB.q.t)/1000),left=Math.max(0,Math.ceil(QBOT_MS/1000-s));
+    if(mem.length<=1)st.textContent=L('Söker en motståndare… Dyker ingen upp möter du bottar om '+left+' s.','Looking for an opponent… If nobody shows up you\'ll play bots in '+left+' s.');
+    else if(s>20)st.textContent=L('Inga andra lag online just nu. Kör en internmatch så länge, eller vänta kvar.','No other teams online right now. Play an internal match meanwhile, or keep waiting.');
+    else st.textContent='Söker ett annat party att möta… '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
   else st.textContent=lead?(mem.length<2?'Sök match för att möta ett annat party, eller bjud in vänner och kör internmatch.':'Internmatch delar partyt i två lag. Klicka på lagknapparna för att byta.'):'Väntar på att ledaren startar.';
 }
 /* matchmaking */
@@ -7546,8 +7772,13 @@ function queueTick(){
   pend=null;const mid='m-'+hash(key)+'-'+hash(key+'x').slice(0,4);const side=a.p===PARTY.id?'A':'B';
   setLobby({q:null});PARTY.go={m:mid,side,i:Date.now()};partyPresence();enterMatch(mid,side);
 }
-setInterval(()=>{if(state==='menu'){queueTick();if(LOB.q)renderParty();}},500);
-$('queueBtn').addEventListener('click',()=>{if(!isLeader())return;if(LOB.q)setLobby({q:null});else setLobby({q:{p:PARTY.id,t:Date.now(),n:partyMembers().length}});renderParty();});
+const QBOT_MS=12000;
+// ingen ska fastna i en tom kö: är man ensam och ingen motståndare dyker upp på tolv sekunder blir det en bottmatch i stället
+function queueBots(){if(!LOB.q||!isLeader()||state!=='menu'||pend)return;const w=Date.now()-(+LOB.q.t||Date.now());
+  if(partyMembers().length<=1&&w>QBOT_MS){setLobby({q:null});toast(L('Ingen motståndare online just nu. Du möter bottar så länge.','No opponent online right now. You\'re up against bots meanwhile.'));startGame('train','A');}}
+setInterval(()=>{if(state==='menu'){queueTick();queueBots();if(state==='menu'&&LOB.q)renderParty();}},500);
+const isGuest=()=>!NET.on&&!!(window.DOGLERS_FB&&window.DOGLERS_FB.login);
+$('queueBtn').addEventListener('click',()=>{if(isGuest()){window.DOGLERS_FB.login('new');return;}if(!isLeader())return;if(LOB.q)setLobby({q:null});else setLobby({q:{p:PARTY.id,t:Date.now(),n:partyMembers().length}});renderParty();});
 $('internBtn').addEventListener('click',()=>{const mem=partyMembers();if(!isLeader()||mem.length<2)return;
   const t=pickTeams(mem);if(!Object.values(t).includes('A')||!Object.values(t).includes('B')){toast('Båda lagen behöver minst en spelare.');return;}
   const mid='m-'+PARTY.id.slice(2)+'-'+rid6().slice(0,4),mp=profile.mapPref||'rnd';setLobby({q:null});PARTY.go={m:mid,t,i:Date.now(),mp};partyPresence();enterMatch(mid,t[NET.uid]||'A',mp);});
@@ -7586,7 +7817,7 @@ function netFrame(dt){
 /* ---------- menyer ---------- */
 function hideAll(){['bootScr','nameScr','menu','endScr','pause'].forEach(id=>$(id).hidden=true);homeSettings();}
 function showName(){hideAll();state='name';$('nameScr').hidden=false;$('nameIn').value=profile.name||'';$('nameErr').textContent='';setTimeout(()=>$('nameIn').focus(),50);}
-function showMenu(){hideAll();$('hud').hidden=true;state='menu';$('menu').hidden=false;$('meName').textContent=profile.name||'–';renderShop();renderParty();renderFriends();renderMapSeg();vm.visible=false;lobbySync(NET.on?partyMembers():null);$('rangeHud').hidden=true;qEnsure();qBadge();if(!$('tab-quests').hidden)renderQuests();}
+function showMenu(){if(AUTOQ.pend){AUTOQ.pend=false;autoQApply();}if(BB.note){const n=BB.note;BB.note=null;setTimeout(()=>toast(n),600);}hideAll();$('hud').hidden=true;state='menu';$('menu').hidden=false;$('meName').textContent=profile.name||'–';renderShop();renderParty();renderFriends();renderMapSeg();vm.visible=false;lobbySync(NET.on?partyMembers():null);$('rangeHud').hidden=true;qEnsure();qBadge();if(!$('tab-quests').hidden)renderQuests();}
 function switchTab(t){const all=[...$('tabs').children].map(b=>b.dataset.tab);[...$('tabs').children].forEach(b=>b.classList.toggle('on',b.dataset.tab===t));all.forEach(k=>{const s=$('tab-'+k);if(s)s.hidden=k!==t;});if(t==='friends')renderFriends();if(t==='quests')renderQuests();if(t==='shop')renderPacks();}
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)switchTab(b.dataset.tab);});
 $('nameForm').addEventListener('submit',async e=>{e.preventDefault();const btn=$('nameBtn');btn.disabled=true;$('nameErr').textContent='';
@@ -7803,42 +8034,133 @@ function fzNote(gap){try{const r=renderer.info,pn=r.programs?r.programs.length:0
   if(FZ.l.length>40)FZ.l.shift();FZ.p=pn;FZ.g=gn;FZ.x=xn;try{localStorage.setItem('doglers.fz',JSON.stringify(FZ.l));}catch(e){}const c=$('fzN');if(c)c.textContent=FZ.l.length;}catch(e){}}
 function fzText(){const r=renderer,gl=r.getContext();let gpu='?';try{const e=gl.getExtension('WEBGL_debug_renderer_info');if(e)gpu=gl.getParameter(e.UNMASKED_RENDERER_WEBGL);}catch(e){}
   return 'DOGLERS FRYSLOGG\n'+gpu+'\n'+innerWidth+'x'+innerHeight+' dpr '+(window.devicePixelRatio||1)+' | '+navigator.userAgent.replace(/.*(Edg|Chrome|Firefox)\/([\d.]+).*/,'$1 $2')+'\n'+FZ.l.map(e=>JSON.stringify(e)).join('\n');}
+/* ---------- v44: svarta lådan — fel och hängningar antecknas i frysloggen, även om sidan måste laddas om ---------- */
+function fzSave(){try{localStorage.setItem('doglers.fz',JSON.stringify(FZ.l));}catch(e){}const c=document.getElementById('fzN');if(c)c.textContent=FZ.l.length;}
+function fzCtx(){let o={};try{o={s:Math.round((performance.now()-FZ.t0)/1000),ph:G.ph,mode:G.mode,map:String(curMap),q:profile.perf?'P':profile.shadow|0};}catch(e){}return o;}
+function fzPush(o){FZ.l.push(o);while(FZ.l.length>40)FZ.l.shift();fzSave();}
+function fzErr(e,at){try{const msg=String(e&&e.message||e).slice(0,160);
+  const st=String(e&&e.stack||'').split('\n').slice(1,4).map(l=>l.trim().replace(/^at /,'').replace(/https?:\/\/[^\s)]*\//g,'')).join(' < ').slice(0,260);
+  const p=FZ.l[FZ.l.length-1];if(p&&p.err===msg&&p.at===at){p.n=(p.n||1)+1;if(p.n%120===0)fzSave();return;}
+  fzPush(Object.assign({err:msg,at:at||'?',st},fzCtx()));}catch(x){}}
+window.addEventListener('error',ev=>{if(ev&&ev.message&&!/Script error|ResizeObserver/.test(ev.message))fzErr(ev.error||ev.message,'window');});
+window.addEventListener('unhandledrejection',ev=>{const r=ev&&ev.reason;if(r&&r.stack&&!/offline|guest|firebase|permission|not_permitted|network|timeout|AbortError|NotAllowedError/i.test(String(r.name||'')+String(r.message||r)))fzErr(r,'promise');});
+// vakten är en egen tråd: spelet säger "u" (räknar) och "d" (ritar) varje bild. Blir det tyst i mer än tre sekunder skriver vakten upp var det tog stopp.
+const BB={w:null,tag:'idle',note:null};
+function bbBlame(m){try{if(m&&typeof m.sinceSay==='number'&&m.sinceSay>=0&&m.sinceSay<2500&&profile.annVoice!==false&&profile.announcer!==false){profile.annVoice=false;saveProfile();
+  BB.note=L('Speakerrösten stängdes av eftersom spelet hängde sig när den pratade. Trumman finns kvar. Slå på den igen under Inställningar → Ljud.','The announcer voice was turned off because the game froze while it was speaking. The drum hit stays. Turn it back on under Settings → Audio.');}}catch(e){}}
+(function(){try{
+  const src="let last=Date.now(),tick=Date.now(),tag='idle',ctx=null,rep=null,db=null,sayT=0;"+
+  "const open=()=>new Promise(r=>{try{const q=indexedDB.open('doglers-bb',1);q.onupgradeneeded=()=>q.result.createObjectStore('h',{keyPath:'id'});q.onsuccess=()=>r(q.result);q.onerror=()=>r(null);}catch(e){r(null);}});"+
+  "const st=async m=>{db=db||await open();return db?db.transaction('h',m).objectStore('h'):null;};"+
+  "const put=async o=>{try{const s=await st('readwrite');if(s)s.put(o);}catch(e){}};const del=async id=>{try{const s=await st('readwrite');if(s)s.delete(id);}catch(e){}};"+
+  "const all=async()=>{try{const s=await st('readonly');if(!s)return[];return await new Promise(r=>{const q=s.getAll();q.onsuccess=()=>r(q.result||[]);q.onerror=()=>r([]);});}catch(e){return[];}};"+
+  "onmessage=async e=>{const m=e.data;if(m==='q'){const a=await all();for(const o of a)del(o.id);postMessage({old:a});return;}"+
+  "const now=Date.now();if(rep){del(rep.id);postMessage({hang:now-rep.t0,tag:rep.tag,ctx:rep.ctx,sinceSay:rep.sinceSay});rep=null;}"+
+  "if(typeof m==='string'){tag=m;if(m==='say')sayT=now;}else if(m&&m.c)ctx=m.c;last=now;};"+
+  "setInterval(()=>{const now=Date.now(),slept=now-tick>1500;tick=now;if(slept){last=now;return;}if(tag==='idle'||rep)return;"+
+  "if(now-last>3000){rep={id:now,t0:last,tag,ctx,sinceSay:sayT?last-sayT:-1};put(rep);}},500);";
+  BB.w=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));
+  BB.w.onmessage=e=>{const m=e.data||{};
+    if(m.old){for(const o of m.old){fzPush(Object.assign({hang:'omladdad',tag:o.tag,say:o.sinceSay},o.ctx||{}));bbBlame(o);}}
+    else if(m.hang){fzPush(Object.assign({hang:Math.round(m.hang),tag:m.tag,say:m.sinceSay},m.ctx||{}));bbBlame(m);}};
+  BB.w.onerror=()=>{BB.w=null;};
+  BB.w.postMessage('q');
+  const idle=()=>bb('idle');document.addEventListener('visibilitychange',()=>{if(document.hidden)idle();});addEventListener('pagehide',idle);addEventListener('beforeunload',idle);
+  setInterval(()=>{if(BB.w&&BB.tag!=='idle'){try{BB.w.postMessage({c:fzCtx()});}catch(e){}}},2000);
+}catch(e){BB.w=null;}})();
+function bb(tag){if(!BB.w||(tag==='idle'&&BB.tag==='idle'))return;BB.tag=tag;try{BB.w.postMessage(tag);}catch(e){}}
+
+/* ---------- v44: uppvärmning — varje sak ritas en gång bakom laddningsskärmen, i små portioner ----------
+   Grafikkortet bygger sina shaders först när något faktiskt ritas. Förut hände det mitt i matchen, första gången man tittade åt ett nytt håll,
+   och då stod bilden still. Nu ritas allt på banan en gång direkt efter att den laddats (i en pytteliten ruta, portion för portion),
+   så att laddningsskärmen fortsätter röra sig och inget behöver byggas när man väl spelar. */
+var WARM={req:false,on:false,list:null,mask:null,hid:null,cul:null,i:0,n:6,t0:0,ms:0,maxLoad:12000,nB:0};
+try{Object.defineProperty(window,'__warmBusy',{configurable:true,get:()=>(WARM.on&&performance.now()-WARM.t0<WARM.maxLoad)||(WARM.req&&state==='game'&&G.map===curMap)});}catch(e){}
+// listan byggs en gång per bana: det som syns från början först, sedan det som ligger gömt (effekter, reserver)
+function warmBegin(){
+  WARM.req=false;WARM.on=true;WARM.t0=performance.now();WARM.nB=0;window.__warmK=0;
+  const vis=[],hid=[];
+  const walk=(o,h)=>{if(o===vm)return;h=h||!o.visible;if((o.isMesh||o.isPoints||o.isLine||o.isSprite)&&o.material)(h?hid:vis).push(o);for(const c of o.children)walk(c,h);};
+  try{walk(scene,false);}catch(e){}
+  WARM.list=vis.concat(hid);WARM.i=0;WARM.n=6;
+}
+// en portion: gör allt synligt, rita några föremål i en pytteliten ruta, ställ tillbaka. Inget ligger kvar ändrat mellan portionerna.
+function warmSlice(budget,maxB){
+  const L=WARM.list;if(!L){WARM.on=false;return;}
+  const t0=performance.now(),rt=postOn&&composer?composer.readBuffer:null,prev=renderer.getRenderTarget();let sc0=null,nb=0;
+  const hid=[],cul=[],masks=new Array(L.length);bb('warm');
+  const show=o=>{if(o===vm)return;if(!o.visible){hid.push(o);o.visible=true;}if(o.frustumCulled){cul.push(o);o.frustumCulled=false;}for(const c of o.children)show(c);};
+  try{
+    show(scene);for(let k=0;k<L.length;k++){masks[k]=L[k].layers.mask;L[k].layers.mask=2;}
+    if(rt){sc0=[rt.scissorTest,rt.scissor.clone()];rt.scissorTest=true;rt.scissor.set(0,0,4,4);}else{renderer.setScissorTest(true);renderer.setScissor(0,0,4,4);}
+    while(WARM.i<L.length&&nb<maxB&&(nb===0||performance.now()-t0<budget)){
+      const a=WARM.i,b=Math.min(L.length,a+WARM.n),tb=performance.now();
+      for(let k=a;k<b;k++)L[k].layers.mask=masks[k];
+      renderer.setRenderTarget(rt);renderer.render(scene,camera);
+      for(let k=a;k<b;k++)L[k].layers.mask=2;
+      WARM.i=b;nb++;WARM.nB++;const d=performance.now()-tb;WARM.n=d>70?Math.max(1,WARM.n>>1):d<14?Math.min(64,WARM.n*2):WARM.n;
+    }
+  }catch(e){fzErr(e,'warm');WARM.i=L.length;}
+  try{if(rt){if(sc0){rt.scissorTest=sc0[0];rt.scissor.copy(sc0[1]);}}else renderer.setScissorTest(false);renderer.setRenderTarget(prev);}catch(e){}
+  for(let k=0;k<L.length;k++)if(masks[k]!==undefined)L[k].layers.mask=masks[k];
+  const done=WARM.i>=L.length;
+  // sista portionen bakom laddningsskärmen: en hel bild med allt synligt, så att efterbehandlingen och de egna passen också är byggda
+  if(done&&window.dogLoad&&dogLoad.on&&!window.__warmLite){try{draw();}catch(e){fzErr(e,'warm-slut');}}
+  for(const o of hid)o.visible=false;for(const o of cul)o.frustumCulled=true;
+  window.__warmK=L.length?WARM.i/L.length:1;
+  if(done){WARM.list=null;WARM.on=false;WARM.ms=Math.round(performance.now()-WARM.t0);window.__warmK=1;}
+  bb('u');
+}
+// körs varje bild: bakom laddningsskärmen går uppvärmningen för fullt (högst tolv sekunder), sedan en portion per bild
+// när man ändå väntar (vapenval, nedräkning, mellan rundor, död) och aldrig medan man spelar
+function warmTick(now){
+  if(WARM.req&&state==='game'&&!loadMap.__q&&G.map===curMap&&(G.ph!=='pick'||pickWon))warmBegin();
+  if(!WARM.on)return false;
+  const ld=window.dogLoad&&dogLoad.on&&!dogLoad.done;
+  if(ld&&performance.now()-WARM.t0<WARM.maxLoad){warmSlice(26,99);return true;}
+  // under kart- och vapenvalet täcker menyn hela bilden: då ritas ingen 3D och uppvärmningen får hela bildrutan
+  if(state==='game'&&G.ph==='pick'&&pickShown)warmSlice(14,99);
+  else if(state!=='game'||paused||G.ph!=='live'||!P.alive)warmSlice(6,1);
+  return false;
+}
 let last=performance.now(),T=0;
 function loop(now){
   schedFrame(loop);
   if(profile.fpsCap&&profile.vsync!==false){const iv=1000/profile.fpsCap;if(now<FCAP.n-1)return;FCAP.n=Math.max(FCAP.n+iv,now-iv);}
   musicTick();if(SO.open&&state!=='menu')closeSettings(true);
+  if(warmTick(now)){last=now;return;}
+  if(AUTOQ.pend&&state==='game'&&(G.ph!=='live'||!P.alive)&&!(window.dogLoad&&dogLoad.on)){AUTOQ.pend=false;if(window.dogLoad)dogLoad.run(autoQApply,.8);else autoQApply();}
   {const gap=now-last;if(gap>120&&state==='game'&&!paused&&!document.hidden&&!(window.dogLoad&&dogLoad.on))fzNote(gap);else FZ.jsMax=0;}
   const dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;skyMat.uniforms.tm.value=T;if(state!=='game'&&DRN.u>=0)droneStop();
-  if(state==='menu'){updateLobby(dt);renderer.toneMappingExposure=1.12;draw(LOBBY.scene,LOBBY.cam);if(PV.open)pvRender(dt);return;}
+  if(state==='menu'){bb('idle');updateLobby(dt);renderer.toneMappingExposure=1.12;draw(LOBBY.scene,LOBBY.cam);if(PV.open)pvRender(dt);return;}
   if(state!=='game'){
     orbit+=dt*.06;{const cx=MW()/2,cz=MD()/2,R=Math.max(MW(),MD())*.72;camera.position.set(cx+Math.cos(orbit)*R,13*R/34,cz+Math.sin(orbit)*R);camera.lookAt(cx,1,cz);}
     debris.update(dt);sparks.update(dt);streaks.update(dt);updateSmoke(dt);sky.position.copy(camera.position);updatePotty(T);updateMapFx(dt,T);updatePick();
     draw();return;
   }
-  if(G.mode==='mp')netFrame(dt);
+  bb('u');FZ.at='nät';if(G.mode==='mp')netFrame(dt);
   padTick(dt);
-  if(isHost)hostTick(dt);
+  FZ.at='värd';if(isHost)hostTick(dt);
   if(G.map&&(G.ph!=='pick'||pickWon)&&!loadMap.__q&&(G.map!==curMap||!loadMap.__shown)){loadMap.__shown=1;if(window.dogLoad&&!dogLoad.on){loadMap.__q=1;const id=G.map;dogLoad.run(()=>{loadMap.__q=0;if(G.map===id&&curMap!==id)loadMap(id);},1.8);}else if(G.map!==curMap)loadMap(G.map);}
-  updatePick();
+  FZ.at='fas';updatePick();
   if(G.rd!==lastRd){lastRd=G.rd;if(G.rd>0)onRoundStart();}
   onPhase();
-  let sp=0;
+  let sp=0;FZ.at='spelare';
   if(P.alive)sp=updatePlayer(dt);
   if(P.protT>0)P.protT-=dt;
-  if(P.alive&&!paused)updateWeapons(dt);else{P.trigger=P.trigger&&!paused;P.fireCD-=dt;}
-  if(G.mode==='train')updateBots(dt,T);
+  FZ.at='vapen';if(P.alive&&!paused)updateWeapons(dt);else{P.trigger=P.trigger&&!paused;P.fireCD-=dt;}
+  FZ.at='bottar';if(G.mode==='train')updateBots(dt,T);
   if(G.mode==='range')updateRange(dt);
-  updateNades(dt);updateDrops(dt);updateObjective(dt);processCollapse();
+  FZ.at='värld';updateNades(dt);updateDrops(dt);updateObjective(dt);processCollapse();
   debris.update(dt);sparks.update(dt);streaks.update(dt);updateSmoke(dt);updatePotty(T);updateMapFx(dt,T);
-  brassPool.update(dt);shellPool.update(dt);updateFire(dt);updateLightPool(dt);updateMotes(dt,T);updateExposure(dt);
+  FZ.at='effekter';brassPool.update(dt);shellPool.update(dt);updateFire(dt);updateLightPool(dt);updateMotes(dt,T);updateExposure(dt);
   if(MAP.snow&&P.alive){P.brT=(P.brT==null?3:P.brT)-dt;if(P.brT<=0){P.brT=rand(3.4,5);camera.getWorldDirection(fwd);smoke(camera.position.x+fwd.x*.34,camera.position.y-.09,camera.position.z+fwd.z*.34,1,.05,1,.03,.97,.09);}}
-  updateTracers(dt);updateImpacts(dt);kfxUpdate(dt);droneUpdate(dt);birdsTick(dt);torchTick(dt);
+  FZ.at='effekter2';updateTracers(dt);updateImpacts(dt);kfxUpdate(dt);droneUpdate(dt);birdsTick(dt);torchTick(dt);
   boomLight.intensity*=Math.exp(-8*dt);
   dmgFlash=Math.max(0,dmgFlash-dt*1.4);dmgIndT=Math.max(0,dmgIndT-dt*1.2);hitT-=dt;shake*=Math.exp(-6*dt);
   {const low=state==='game'&&P.alive&&G.ph==='live'&&P.hp<35?1-.5*Math.max(0,P.hp)/35:0;HB.k+=(low-HB.k)*Math.min(1,dt*3);HB.p=Math.max(0,HB.p-dt*2.2);
    if(low>0){HB.t-=dt;if(HB.t<=0){HB.t=.6+.55*Math.max(0,P.hp)/35;HB.p=1;HB.n++;try{tn(60,.13,.34*low,'sine',38);setTimeout(()=>{try{tn(52,.15,.24*low,'sine',34);}catch(e){}},150);}catch(e){}}}else HB.t=0;}
-  // banderoll
+  FZ.at='banderoll';
   let bn=null,bt='',bc='';
   if(G.ph==='pick'){}
   else if(G.ph==='wait'){bn='…';bt=G.mode==='mp'?'VÄNTAR PÅ ALLA SPELARE':'GÖR DIG REDO';}
@@ -7850,7 +8172,7 @@ function loop(now){
   else if(!P.alive){bn='UTE';bc='lose';}
   if(G.mode==='range'){const rb=rangeBanner();if(rb){bn=rb[0];bt=rb[1];bc=rb[2];}}
   hud.big.hidden=bn==null;if(bn!=null){hud.bigNum.textContent=bn;hud.bigNum.className=bc;hud.bigTxt.textContent=bt||'';hud.bigTxt.hidden=!bt;}
-  // kamera
+  FZ.at='kamera';
   if(P.alive){
     const bk=profile.bob===false?0:1,bobY=bk*Math.sin(P.bob*2)*.025*Math.min(1,sp/4)*(1-P.aimK*.7)*(1-(P.slK||0));
     // mjuk kameraskakning (brus i stället för slump varje bild) och en liten svikt vid landning
@@ -7863,8 +8185,8 @@ function loop(now){
   }else{vm.visible=false;hud.scope.hidden=true;const m=spectateCam();if(m&&G.ph==='live'){hud.bigTxt.hidden=false;hud.bigTxt.textContent='TITTAR PÅ '+m.name.toUpperCase()+' · MELLANSLAG BYTER';}}
   sky.position.copy(camera.position);
   if(G.mode==='mp'){NETS.sendT-=dt;NETS.p2T=(NETS.p2T||0)-dt;if(NETS.sendT<=0){NETS.sendT=1/30;NETS.p2T=1/60;sendPresence();}else if(NETS.p2T<=0&&p2pOpen()){NETS.p2T=1/60;p2pSend(buildPresence(true),true);}}
-  updateHUD();updatePerf(dt);updateDmgNums(dt);
-  draw();
+  FZ.at='hud';updateHUD();updatePerf(dt);updateDmgNums(dt);
+  FZ.at='rita';bb('d');if(!(G.ph==='pick'&&pickShown))draw();FZ.at='';
 }
 
 /* ---------- kartval i början av matchen ---------- */
@@ -7920,7 +8242,7 @@ async function audioProbe(fn,sec){const save=[AC,master,noiseBuf,revS,revL];cons
   AC=off;master=off.createGain();master.gain.value=.5;master.connect(off.destination);noiseBuf=off.createBuffer(1,off.sampleRate*1.5|0,off.sampleRate);{const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}revS=revL=null;
   try{fn();const buf=await off.startRendering();let pk=0,ss=0,first=-1;const L=buf.getChannelData(0);for(let i=0;i<L.length;i++){const v=Math.abs(L[i]);if(v>pk)pk=v;ss+=v*v;if(first<0&&v>.01)first=i;}return{peak:+pk.toFixed(3),rms:+Math.sqrt(ss/L.length).toFixed(4),start:+(first/44100).toFixed(3)};}
   finally{[AC,master,noiseBuf,revS,revL]=save;}}
-if(/[?&]ilpdebug/.test(location.search))window.__ilp={get FZ(){return FZ;},fzText:()=>fzText(),fzNote:g=>fzNote(g),setPerf:v=>setPerf(v),get HB(){return HB;},landDust:(...a)=>landDust(...a),soldierFx:(...a)=>soldierFx(...a),nearMiss:(...a)=>nearMiss(...a),get nmN(){return nmN;},get MAPo(){return MAP;},enterMatch:(a,b,c)=>enterMatch(a,b,c),leaveMatch:()=>leaveMatch(),hurtPlayer:(...a)=>hurtPlayer(...a),buildLevel:()=>buildLevel(),makeBlockMesh:()=>makeBlockMesh(),onRoundStart:()=>onRoundStart(),resetBots:()=>resetBots(),get bMesh(){return bMesh;},get stats(){return stats;},spawnPlayer:()=>spawnPlayer(),clearEffects:()=>clearEffects(),castRay:(...a)=>castRay(...a),rayTarget:(...a)=>rayTarget(...a),audioProbe,wsnd,set locked(v){locked=v;},get dynScale(){return dynScale;},rollSkin,PACKS,SKINS,addMoney,ML,get paused(){return paused;},set paused(v){paused=v;},RIG,CL,VMS,RC,anchors,clipTargets,startReload,cancelReload,switchW,startRack,updateViewModel,updateWeapons,get armL(){return armL;},POTTY_STRAPS,POTTY_BACK,setLang,get LANG(){return LANG;},gunModels,vm,hands,hand2,sfx,BMAT,envTex,goldMat,scene,THREE,loadMap,MAPS,get curMap(){return curMap;},get bots(){return bots;},get rangeT(){return rangeT;},RANGE,BOARD,startChallenge,rangeReset,setRangeMode,setRangeInf,setRangeDist,setRangeDiff,silPart,rayRT,castRay,enemyTargets,updateRange,renderRangeSet,get T(){return T;},collides,los,railCol,RECOIL,get grass(){return grass;},applyAtts,applySkins,OPTM,ATT_SKINS,NOVA,NKIT,KD,novaKits,npSpawn,novaRl,novaFinish,novaInspect,SKFX_S,SKFX_T,normalTex,addRelief,skinTex,renderArsenal,ARS,OPTI,SCOMPAT,optOverlay,aimFovOf,sightOf,openPreview,closePreview,PV,LSHOW,shopOffers,shopLimited,rarDisp,confirm2,slideStart,slideEnd,nv2Chassis,NV2L,NVHC,partMats,kjDraw,COLL,KILLFX,killFx,killFxSkin,killBanner,KFX,WP,kfxUpdate,FLASHT,collFlash,skinTracer,drawEmblem,NSFX,NPS,qEvent,qEnsure,QM,QDAY,QWEEK,QCH,QEVT,SEASON,QBY,renderQuests,claimQ,claimCh,claimEv,claimTier,claimAllTiers,rerollQ,qClaimable,spLvl,onMyKill,hurtBot,switchTab,showEnd,redeemCode,codeHash,packInvOf,givePacks,openPack,renderPacks,handR,hand2,HANDR,HAND2,HPOSE,HFIT2,HFITR,H2Y,HG,FING,placeRig,rigFit,fitHands,poseHands,blendPose,applyHand,poseArr,IMPK,impK,impact,decMesh,decOwn,streaks,TORCH_I,torch,skyMat,INDOOR,get MAPL(){return MAPL;},get LPOOL(){return LPOOL;},pickMapId,renderMapSeg,MATCH,btype,idx,c0,buildSoldier,animSoldier,LOBBY,draw,setupPost,applyShadows,get postQ(){return postQ;},batchStatic,get state(){return state;},renderer,profile,renderShop,GUNS,get W(){return W;},G,P,remotes,NET,PARTY,MATCH,LOB,FR,camera,get isHost(){return isHost;},fire,hurtPlayer,actors,buildCritter,animCritter,charStyle,swapChars,get CRIT_COATS(){return CRIT_COATS;},get CRIT_CR(){return CRIT_CR;},get CRIT2(){return CRIT2;},TORCHU,WETU,torchTick,applyWet,get BEAM(){return BEAM;},get TDUST(){return TDUST;},get tBounce(){return tBounce;},get TL(){return TL;},SPAWN,get P2P(){return P2P;},p2pAttach,p2pDetach,p2pTick,p2pSend,p2pState,effPing,buildPresence,get AUTOQ(){return AUTOQ;},updateRemote,makeRemote,FOGU,applyAtmo,pcssK,get BIRDS(){return BIRDS;},birdsTick,swayMat,openSettings,closeSettings,get SO(){return SO;},gxo,gxSet,postCfg,get GXC(){return GXC;},get composer(){return composer;},get FXK(){return FXK;},kbBuild,get KBA(){return KBA;},get KBM(){return KBM;},padTick,get PAD(){return PAD;},syncSet,setPane,applyUI,applyTexQ,get TQ(){return TQ;},texAni,schedFrame,dmgNum,get DN(){return DN;},baseFov,get musicBus(){return musicBus;},get mainOut(){return mainOut;},sun,torch,get bloomPass(){return bloomPass;},get ssaoPass(){return ssaoPass;},get smaaPass(){return smaaPass;},get fxaaPass(){return fxaaPass;},get gradePass(){return gradePass;},applyPost,shadowsOnly,setLightPool,get isFull(){return isFull;},get keys(){return keys;},qEv:(e,d)=>qEvent(e,d),rollW:P0=>rollSkin(P0),rqW:()=>renderQuests(),get DRN(){return DRN;},droneInspect,droneUpdate,get QDR(){return QDR;},claimDr,claimDrBonus,drTick,gunBoxL,renderQuests,qEvent,COLL,OPT,pistolHouse,get debrisMesh(){return scene.children.find(o=>o.isInstancedMesh&&o.count===900);},applySights,CRK,crkMesh,bhp,cellCenter,breakFx,glassWeb,crackAt,debris,HP,DESTR,smokes,get shake(){return shake;}};
+if(/[?&]ilpdebug/.test(location.search))window.__ilp={get FZ(){return FZ;},get WX(){return WX;},wxApply:()=>wxApply(),skyMat,sun,get hemi(){return hemi;},get NET(){return NET;},get LOB(){return LOB;},get PARTY(){return PARTY;},queueBots:()=>queueBots(),setLobby:o=>setLobby(o),isGuest:()=>isGuest(),renderParty:()=>renderParty(),get WARM(){return WARM;},get BB(){return BB;},bb:t=>bb(t),fzErr:(e,a)=>fzErr(e,a),get AUTOQ(){return AUTOQ;},autoQ:f=>autoQ(f),fzText:()=>fzText(),fzNote:g=>fzNote(g),setPerf:v=>setPerf(v),get HB(){return HB;},landDust:(...a)=>landDust(...a),soldierFx:(...a)=>soldierFx(...a),nearMiss:(...a)=>nearMiss(...a),get nmN(){return nmN;},get MAPo(){return MAP;},enterMatch:(a,b,c)=>enterMatch(a,b,c),leaveMatch:()=>leaveMatch(),hurtPlayer:(...a)=>hurtPlayer(...a),buildLevel:()=>buildLevel(),makeBlockMesh:()=>makeBlockMesh(),onRoundStart:()=>onRoundStart(),resetBots:()=>resetBots(),get bMesh(){return bMesh;},get stats(){return stats;},spawnPlayer:()=>spawnPlayer(),clearEffects:()=>clearEffects(),castRay:(...a)=>castRay(...a),rayTarget:(...a)=>rayTarget(...a),audioProbe,wsnd,set locked(v){locked=v;},get dynScale(){return dynScale;},rollSkin,PACKS,SKINS,addMoney,ML,get paused(){return paused;},set paused(v){paused=v;},RIG,CL,VMS,RC,anchors,clipTargets,startReload,cancelReload,switchW,startRack,updateViewModel,updateWeapons,get armL(){return armL;},POTTY_STRAPS,POTTY_BACK,setLang,get LANG(){return LANG;},gunModels,vm,hands,hand2,sfx,BMAT,envTex,goldMat,scene,THREE,loadMap,MAPS,get curMap(){return curMap;},get bots(){return bots;},get rangeT(){return rangeT;},RANGE,BOARD,startChallenge,rangeReset,setRangeMode,setRangeInf,setRangeDist,setRangeDiff,silPart,rayRT,castRay,enemyTargets,updateRange,renderRangeSet,get T(){return T;},collides,los,railCol,RECOIL,get grass(){return grass;},applyAtts,applySkins,OPTM,ATT_SKINS,NOVA,NKIT,KD,novaKits,npSpawn,novaRl,novaFinish,novaInspect,SKFX_S,SKFX_T,normalTex,addRelief,skinTex,renderArsenal,ARS,OPTI,SCOMPAT,optOverlay,aimFovOf,sightOf,openPreview,closePreview,PV,LSHOW,shopOffers,shopLimited,rarDisp,confirm2,slideStart,slideEnd,nv2Chassis,NV2L,NVHC,partMats,kjDraw,COLL,KILLFX,killFx,killFxSkin,killBanner,KFX,WP,kfxUpdate,FLASHT,collFlash,skinTracer,drawEmblem,NSFX,NPS,qEvent,qEnsure,QM,QDAY,QWEEK,QCH,QEVT,SEASON,QBY,renderQuests,claimQ,claimCh,claimEv,claimTier,claimAllTiers,rerollQ,qClaimable,spLvl,onMyKill,hurtBot,switchTab,showEnd,redeemCode,codeHash,packInvOf,givePacks,openPack,renderPacks,handR,hand2,HANDR,HAND2,HPOSE,HFIT2,HFITR,H2Y,HG,FING,placeRig,rigFit,fitHands,poseHands,blendPose,applyHand,poseArr,IMPK,impK,impact,decMesh,decOwn,streaks,TORCH_I,torch,skyMat,INDOOR,get MAPL(){return MAPL;},get LPOOL(){return LPOOL;},pickMapId,renderMapSeg,MATCH,btype,idx,c0,buildSoldier,animSoldier,LOBBY,draw,setupPost,applyShadows,get postQ(){return postQ;},batchStatic,get state(){return state;},renderer,profile,renderShop,GUNS,get W(){return W;},G,P,remotes,NET,PARTY,MATCH,LOB,FR,camera,get isHost(){return isHost;},fire,hurtPlayer,actors,buildCritter,animCritter,charStyle,swapChars,get CRIT_COATS(){return CRIT_COATS;},get CRIT_CR(){return CRIT_CR;},get CRIT2(){return CRIT2;},TORCHU,WETU,torchTick,applyWet,get BEAM(){return BEAM;},get TDUST(){return TDUST;},get tBounce(){return tBounce;},get TL(){return TL;},SPAWN,get P2P(){return P2P;},p2pAttach,p2pDetach,p2pTick,p2pSend,p2pState,effPing,buildPresence,get AUTOQ(){return AUTOQ;},updateRemote,makeRemote,FOGU,applyAtmo,pcssK,get BIRDS(){return BIRDS;},birdsTick,swayMat,openSettings,closeSettings,get SO(){return SO;},gxo,gxSet,postCfg,get GXC(){return GXC;},get composer(){return composer;},get FXK(){return FXK;},kbBuild,get KBA(){return KBA;},get KBM(){return KBM;},padTick,get PAD(){return PAD;},syncSet,setPane,applyUI,applyTexQ,get TQ(){return TQ;},texAni,schedFrame,dmgNum,get DN(){return DN;},baseFov,get musicBus(){return musicBus;},get mainOut(){return mainOut;},sun,torch,get bloomPass(){return bloomPass;},get ssaoPass(){return ssaoPass;},get smaaPass(){return smaaPass;},get fxaaPass(){return fxaaPass;},get gradePass(){return gradePass;},applyPost,shadowsOnly,setLightPool,get isFull(){return isFull;},get keys(){return keys;},qEv:(e,d)=>qEvent(e,d),rollW:P0=>rollSkin(P0),rqW:()=>renderQuests(),get DRN(){return DRN;},droneInspect,droneUpdate,get QDR(){return QDR;},claimDr,claimDrBonus,drTick,gunBoxL,renderQuests,qEvent,COLL,OPT,pistolHouse,get debrisMesh(){return scene.children.find(o=>o.isInstancedMesh&&o.count===900);},applySights,CRK,crkMesh,bhp,cellCenter,breakFx,glassWeb,crackAt,debris,HP,DESTR,smokes,get shake(){return shake;}};
 $('mbTog').addEventListener('change',e=>{profile.mblur=e.target.checked;saveProfile();});
 $('shpTog').addEventListener('change',e=>{profile.sharp=e.target.checked;saveProfile();});
 $('shkTog').addEventListener('change',e=>{profile.camShake=e.target.checked;saveProfile();});
@@ -7939,7 +8261,7 @@ if(!profile.gfxAuto){profile.gfxAuto=1;try{const gl=renderer.getContext(),dbg=gl
 if(profile.langV!==1){profile.lang='en';profile.langV=1;try{saveProfile();}catch(e){}}
 let LANG=profile.lang==='sv'?'sv':'en';
 const GT='GT (Gold Toilet)',GTU='GT (GOLD TOILET)';
-const EN={'Fryslogg':'Freeze log','Spelet antecknar varje frysning. Kopiera loggen och skicka den om spelet hackar.':'The game notes every freeze. Copy the log and send it if the game stutters.','Kopiera':'Copy','Töm':'Clear','Prestandaläge':'Performance mode','För svaga datorer: stänger av skuggor, effekter och gräs och sänker upplösningen. Ger högst FPS.':'For weak computers: turns off shadows, effects and grass and lowers the resolution. Highest FPS.','Följ Doglers på TikTok':'Follow Doglers on TikTok',
+const EN={'Väder':'Weather','Regn, snö, löv och sand som blåser · Effektkvalitet Medel och Hög':'Rain, snow, leaves and blowing sand · Effects quality Medium and High','Blixtar':'Lightning','Åskan på Slottet lyser upp himlen. Stäng av om du är känslig för blinkande ljus.':'The thunderstorm on The Castle lights up the sky. Turn off if you are sensitive to flashing lights.','Spela online':'Play online','Gratis konto · möt riktiga spelare':'Free account · play real players','Spela nu':'Play now','Match mot fem bottar · ger pengar':'Match against five bots · earns money','Skapa konto':'Create account','Logga in':'Sign in','Fryslogg':'Freeze log','Spelet antecknar varje frysning. Kopiera loggen och skicka den om spelet hackar.':'The game notes every freeze. Copy the log and send it if the game stutters.','Kopiera':'Copy','Töm':'Clear','Prestandaläge':'Performance mode','För svaga datorer: stänger av skuggor, effekter och gräs och sänker upplösningen. Ger högst FPS.':'For weak computers: turns off shadows, effects and grass and lowers the resolution. Highest FPS.','Följ Doglers på TikTok':'Follow Doglers on TikTok',
  'Uppdrag':'Quests',
  'Gubbar':'Characters','Utseende':'Look','Taxen':'Dachshund','Soldater':'Soldiers','Klassiska soldater':'Classic soldiers','Taxen eller de klassiska soldaterna. Lobbyn byts direkt, matcher från nästa match':'The Dachshund or the classic soldiers. The lobby changes right away, matches from the next match',
  'Våta ytor':'Wet surfaces','Pölar och blanka, fuktiga golv på Slottet och i Hamnen':'Puddles and glossy damp floors at the Castle and the Harbour','Ficklampa':'Flashlight','Nattfärg':'Night colour','I svagt ljus drar färgerna åt kallt blått som i månsken, facklor och ficklampa behåller sin värme · Slottet':'In dim light colours shift towards cool moonlit blue, torches and the flashlight keep their warmth · the Castle','Ljuskägla i luften':'Light beam in the air','Strålen syns i dammig luft och mörker · Effektkvalitet Medel och Hög':'The beam shows in dusty air and darkness · Effects quality Medium and High','Damm i ljuset':'Dust in the light','Små korn som glittrar när de hamnar i strålen':'Tiny specks that glitter when they drift into the beam','Studsljus':'Bounce light','Ytan du lyser på sprider ljuset vidare ut i rummet':'The surface you light up spreads the light into the room','Mjuk följning':'Smooth follow','Ljuset släpar en aning efter när du vänder dig, som en riktig lampa i handen':'The light trails slightly when you turn, like a real hand-held light','Upplösning och mjukhet på skuggorna · ficklampan kastar skuggor från Medel · Ultra: mjuka kontaktskuggor':'Resolution and softness of shadows · the flashlight casts shadows from Medium · Ultra: soft contact shadows',
@@ -8310,7 +8632,7 @@ function applyTexQ(){const a=texAni();TQ.a=a;const seen=new Set();
   for(const sc of [scene,LOBBY&&LOBBY.scene])if(sc)sc.traverse(o=>{if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(fix);});}
 // effektkvalitet: antal partiklar, dynamiska ljus och damm i luften
 function fxN(c){if(!(FXK<1))return c;const v=c*FXK,n=Math.floor(v);return n+(Math.random()<v-n?1:0);}
-function applyFx(){const v=gxo('fx');FXK=[.45,.72,1][v]||1;setLightPool(v>=2?((profile.shadow|0)>=3?8:6):v===1?5:3);}
+function applyFx(){const v=gxo('fx');FXK=[.45,.72,1][v]||1;setLightPool(v>=2?((profile.shadow|0)>=3?8:6):v===1?5:3);try{if(MAP&&typeof T==='number')wxApply();}catch(e){}}
 // synfält och siktavstånd
 function baseFov(){return clamp(+profile.fov||75,65,100);}
 function applyRD(){const v=profile.perf?0:profile.rd==null?1:profile.rd;camera.far=[210,320,480][v]||320;camera.updateProjectionMatrix();GRK=[.65,1,1.45][v]||1;
@@ -8455,7 +8777,7 @@ function syncSet(){const on=(id,v)=>{const e=$(id);if(e)e.checked=!!v;},seg=(id,
   seg('dispSeg',isFull()?'full':'win');on('vsTog',profile.vsync!==false);seg('fpsSeg',+profile.fpsCap||0);on('dynTog',profile.dynres!==false);
   seg('texSeg',gxo('tex'));seg('shSeg',gxo('sh'));seg('aaSeg',gxo('aa'));seg('fxSeg',gxo('fx'));seg('rdSeg',profile.rd==null?1:profile.rd);seg('postSeg',gxo('post'));
   const msa=$('aaSeg')&&$('aaSeg').querySelector('[data-v="msaa"]');if(msa)msa.disabled=!(renderer.capabilities.isWebGL2&&THREE.WebGLMultisampleRenderTarget);
-  const p=gxo('post');on('blTog',profile.bloom!==false);on('aoTog',profile.ao!==false);on('rayTog',profile.rays!==false);on('mbTog',!!profile.mblur);on('dofTog',profile.dof!==false);on('flareTog',profile.flare!==false);on('hfogTog',profile.hfog!==false);on('lifeTog',profile.life!==false);on('wetTog',profile.wet!==false);on('ngTog',profile.ngrade!==false);on('fbeamTog',profile.fbeam!==false);on('fdustTog',profile.fdust!==false);on('fbounceTog',profile.fbounce!==false);on('tlagTog',profile.torchLag!==false);on('vliteTog',profile.vlite!==false);
+  const p=gxo('post');on('blTog',profile.bloom!==false);on('aoTog',profile.ao!==false);on('rayTog',profile.rays!==false);on('mbTog',!!profile.mblur);on('dofTog',profile.dof!==false);on('flareTog',profile.flare!==false);on('hfogTog',profile.hfog!==false);on('lifeTog',profile.life!==false);on('wxTog',profile.wx!==false);on('boltTog',wxBoltOk());on('wetTog',profile.wet!==false);on('ngTog',profile.ngrade!==false);on('fbeamTog',profile.fbeam!==false);on('fdustTog',profile.fdust!==false);on('fbounceTog',profile.fbounce!==false);on('tlagTog',profile.torchLag!==false);on('vliteTog',profile.vlite!==false);
   for(const[id,need]of [['blTog',1],['aoTog',2],['rayTog',2],['dofTog',2],['flareTog',2]]){const e=$(id);if(e){e.disabled=p<need;const r=e.closest('.sRow');if(r)r.classList.toggle('dis',p<need);}}
   rng('volIn','volV',volMain(),v=>Math.round(v*100));rng('musIn','musV',volMus(),v=>Math.round(v*100));rng('sfxIn','sfxV',volSfx(),v=>Math.round(v*100));rng('vcIn','vcV',profile.vcv==null?.8:profile.vcv,v=>Math.round(v*100));
   rng('sensIn','sensV',profile.sens||1,v=>v.toFixed(2));rng('adsIn','adsV',profile.adsS||1,v=>v.toFixed(2));on('invTog',!!profile.invY);on('adsTgl',!!profile.adsTgl);
@@ -8480,7 +8802,7 @@ function initSettings2(){
   tog('vsTog','vsync',()=>{VS.next=0;});seg('fpsSeg',v=>{profile.fpsCap=+v||0;saveProfile();FCAP.n=0;VS.next=0;});
   seg('texSeg',v=>{gxSet('tex',+v);applyTexQ();});seg('shSeg',v=>{gxSet('sh',+v);shadowsOnly(q());});seg('aaSeg',v=>{gxSet('aa',v);applyPost(q());});
   seg('fxSeg',v=>{gxSet('fx',+v);applyFx();});seg('rdSeg',v=>{profile.rd=+v;saveProfile();applyRD();});seg('postSeg',v=>{gxSet('post',+v);applyPost(q());});
-  tog('blTog','bloom',()=>applyPost(q()));tog('flareTog','flare');tog('hfogTog','hfog',applyAtmo);tog('lifeTog','life');tog('wetTog','wet',applyWet);tog('ngTog','ngrade',applyWet);tog('fbeamTog','fbeam');tog('fdustTog','fdust');tog('fbounceTog','fbounce');tog('tlagTog','torchLag');tog('vliteTog','vlite',()=>{try{volLights();}catch(e){}});tog('aoTog','ao',()=>applyPost(q()));tog('rayTog','rays',()=>applyPost(q()));tog('dofTog','dof',()=>applyPost(q()));
+  tog('blTog','bloom',()=>applyPost(q()));tog('flareTog','flare');tog('hfogTog','hfog',applyAtmo);tog('lifeTog','life');tog('wxTog','wx',()=>{try{wxApply();}catch(e){}});tog('boltTog','bolt');tog('wetTog','wet',applyWet);tog('ngTog','ngrade',applyWet);tog('fbeamTog','fbeam');tog('fdustTog','fdust');tog('fbounceTog','fbounce');tog('tlagTog','torchLag');tog('vliteTog','vlite',()=>{try{volLights();}catch(e){}});tog('aoTog','ao',()=>applyPost(q()));tog('rayTog','rays',()=>applyPost(q()));tog('dofTog','dof',()=>applyPost(q()));
   // ljud
   rng('musIn','musV',v=>Math.round(v*100),v=>{profile.music=v;});rng('sfxIn','sfxV',v=>Math.round(v*100),v=>{profile.sfxv=v;},null,applyAudio);rng('vcIn','vcV',v=>Math.round(v*100),v=>{profile.vcv=v;});
   // kontroller
@@ -8491,7 +8813,7 @@ function initSettings2(){
   $('kbReset').addEventListener('click',()=>{profile.binds={};KBC.id=null;saveProfile();kbBuild();renderKb();setSaved(L('Tangenterna är återställda','Keys restored'));});
   // spel
   rng('fovIn','fovV',v=>Math.round(v)+'°',v=>{profile.fov=v;},null,()=>{if(state==='game'&&!(P.aimK>0)){camera.fov=baseFov();camera.updateProjectionMatrix();}});
-  tog('bobTog','bob');tog('annTog','announcer');tog('p2pTog','p2p',()=>{if(profile.p2p===false)p2pDetach();else if(MATCH.r)p2pAttach(MATCH.r);});tog('npTog','netPred');tog('aqTog','autoQ',()=>{AUTOQ.done=false;AUTOQ.low=0;});$('perfTog').addEventListener('change',e=>setPerf(e.target.checked));
+  tog('bobTog','bob');tog('annTog','announcer',()=>{if(profile.announcer!==false&&profile.annVoice===false){profile.annVoice=true;saveProfile();}});tog('p2pTog','p2p',()=>{if(profile.p2p===false)p2pDetach();else if(MATCH.r)p2pAttach(MATCH.r);});tog('npTog','netPred');tog('aqTog','autoQ',()=>{AUTOQ.done=false;AUTOQ.low=0;});$('perfTog').addEventListener('change',e=>setPerf(e.target.checked));
   $('fzN').textContent=FZ.l.length;
   $('fzCopy').addEventListener('click',()=>{const t=fzText();const done=()=>toast(L('Frysloggen är kopierad. Klistra in den i chatten.','Freeze log copied. Paste it in the chat.'));
     try{navigator.clipboard.writeText(t).then(done,()=>{window.prompt('Ctrl+C',t);});}catch(e){window.prompt('Ctrl+C',t);}});
@@ -8623,9 +8945,12 @@ const AUTOQ={low:0,done:false};
 function setPerf(on){profile.perf=!!on;saveProfile();dynScale=1;applyShadows(profile.shadow|0);applyRD();try{syncSet();}catch(e){}}
 function autoQ(fps){if(profile.autoQ===false||AUTOQ.done||state!=='game'||paused||/ilpdebug/.test(location.search))return;
   if(fps<40)AUTOQ.low++;else AUTOQ.low=Math.max(0,AUTOQ.low-2);
-  if(AUTOQ.low>=16&&(profile.shadow|0)===0&&!profile.perf){AUTOQ.done=true;AUTOQ.low=0;setPerf(true);toast(L('Prestandaläget slogs på för jämnare spel. Ändra under Inställningar.','Performance mode was turned on for smoother play. Change it in Settings.'));}
-  else if(AUTOQ.low>=16&&(profile.shadow|0)>0){AUTOQ.done=true;AUTOQ.low=0;profile.shadow=(profile.shadow|0)-1;profile.gx={};saveProfile();dynScale=1;applyShadows(profile.shadow);try{syncSet();}catch(e){}
-    toast(L('Grafiken sänktes till '+['Låg','Medel','Hög','Ultra'][profile.shadow]+' för jämnare spel. Ändra under Inställningar (Esc i lobbyn).','Graphics lowered to '+['Low','Medium','High','Ultra'][profile.shadow]+' for smoother play. Change it in Settings (Esc in the lobby).'));}}
+  if(AUTOQ.low>=16&&((profile.shadow|0)>0||!profile.perf)){AUTOQ.done=true;AUTOQ.low=0;AUTOQ.pend=true;
+    try{dynScale=Math.min(dynScale,.7);DYN.block=1e9;renderer.setPixelRatio(basePR*dynScale);onResize();}catch(e){}}}
+function autoQApply(){try{DYN.block=0;
+  if((profile.shadow|0)===0&&!profile.perf){setPerf(true);toast(L('Prestandaläget slogs på för jämnare spel. Ändra under Inställningar.','Performance mode was turned on for smoother play. Change it in Settings.'));}
+  else if((profile.shadow|0)>0){profile.shadow=(profile.shadow|0)-1;profile.gx={};saveProfile();dynScale=1;applyShadows(profile.shadow);try{syncSet();}catch(e){}
+    toast(L('Grafiken sänktes till '+['Låg','Medel','Hög','Ultra'][profile.shadow]+' för jämnare spel. Ändra under Inställningar (Esc i lobbyn).','Graphics lowered to '+['Low','Medium','High','Ultra'][profile.shadow]+' for smoother play. Change it in Settings (Esc in the lobby).'));}}catch(e){}}
 
 /* ---------- v30: ficklampan — ljusbild, skuggor, mjuk följning, ljuskägla och damm i luften, studsljus ---------- */
 // ficklampan är samma spotlight som förut, märkt med decay 3 så att skuggarna ger den den nya ljusbilden och kvadratiska avtagandet
@@ -9187,7 +9512,11 @@ if(!profile.dyn2){profile.dyn2=1;profile.dynres=false;dynScale=1;}
 if(!profile.owned||!profile.owned.includes('std'))profile.owned=['std'].concat(profile.owned||[]);
 applySkins();applySights();applyAtts();applyShadows(profile.shadow|0);applyLang();
 loadMap('kvarteret');applyShadows(profile.shadow|0);
-{const _lp=loop;loop=function(now){const a=performance.now();try{return _lp(now);}finally{FZ.js=performance.now()-a;}};}
+{const _lp=loop;let bad=0;loop=function(now){const a=performance.now();try{_lp(now);bad=0;}catch(e){fzErr(e,'loop:'+(FZ.at||'?'));bad++;
+    if(WARM.on){WARM.on=false;WARM.list=null;}
+    if(state==='game'){try{updateHUD();}catch(x){}try{draw();}catch(x){}
+      if(bad>240){bad=0;try{toast(L('Något gick fel i matchen, så den avbröts. Felet är sparat i frysloggen under Inställningar.','Something went wrong in the match, so it was stopped. The error is saved in the freeze log under Settings.'));quitGame();}catch(x){}}}}
+  finally{FZ.js=performance.now()-a;}};}
 requestAnimationFrame(loop);
 (async()=>{
   await netInit();
@@ -9196,6 +9525,7 @@ requestAnimationFrame(loop);
     if(!ok)profile.name='';
   }
   if(NET.on)setLobby({});
+  if(!NET.on&&(!profile.name||!NAME_RE.test(profile.name))){profile.name='Dogler'+(1000+Math.floor(Math.random()*9000));profile.guestName=true;saveProfile();}
   if(!profile.name||!NAME_RE.test(profile.name)){showName();return;}
   if(NET.on)await joinParty('p-'+rid6());
   showMenu();
