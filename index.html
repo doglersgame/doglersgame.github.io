@@ -658,6 +658,10 @@ section:not([hidden]){animation:secIn .32s var(--ease) both}
 .mode.main::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.1) 48%,transparent 62%);transform:translateX(-120%);transition:transform .9s var(--ease);pointer-events:none}
 .mode.main:hover::after{transform:translateX(120%)}
 .mode:active:not(:disabled){transform:scale(.985)}
+.modes.modes{grid-template-columns:repeat(3,minmax(0,1fr))}.modes .mode.main{grid-column:1/-1}@media(max-width:560px){.modes.modes{grid-template-columns:1fr}}.modes.modes .mode:not(.main){column-gap:10px}.modes.modes .mode:not(.main) .mIco{width:34px;height:34px}.modes.modes .mode:not(.main) b{font-size:17px;letter-spacing:.02em;white-space:nowrap}
+#rankBtn b::after{content:'';display:inline-block;width:10px;height:10px;margin-left:10px;border-radius:2px;transform:rotate(45deg) translateY(-3px);background:var(--rk,#d08b5b);box-shadow:0 0 12px var(--rk,#d08b5b)}
+.mode.q{border-color:var(--sun1,#ffb36b)!important;animation:qPulse 1.4s ease-in-out infinite}@keyframes qPulse{50%{box-shadow:0 0 0 3px rgba(255,179,107,.25),0 0 30px -6px rgba(255,140,90,.7)}}
+#endRank{margin:10px auto 0;display:flex;gap:12px;align-items:baseline;justify-content:center;font-family:var(--display,inherit)}#endRank b{font-size:30px;letter-spacing:.04em}#endRank.up b{color:#7fe08a}#endRank.down b{color:#ff7a6b}#endRank span{opacity:.85}
 @media (max-width:520px){.modes{grid-template-columns:1fr}}
 /* butikens kategorier */
 .shopNav{position:sticky;top:0;z-index:3;display:flex;gap:4px;flex-wrap:wrap;padding:6px;margin:0 -2px;border-radius:var(--r-m);background:rgba(18,13,26,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line)}
@@ -1205,16 +1209,19 @@ body.noDI #dmgInd,body.noHM #hitm,body.noNT #qPop,body.noFP #perf,body.noSE #vig
       </nav>
       <section id="tab-play">
         <div class="modes">
-          <button class="mode main" id="queueBtn" type="button"><b id="queueLbl">Sök match</b><small>Ditt party mot ett annat party</small></button>
-          <button class="mode" id="trainBtn" type="button"><b>Bottar</b><small>Mot fem bottar · ger pengar</small></button>
+          <button class="mode main" id="rankBtn" type="button"><b>Rank</b><small>3v3 rankad · Brons till Diamant</small></button>
+          <button class="mode" id="m3Btn" type="button"><b>3v3</b><small>Lag mot lag · ta med två vänner</small></button>
+          <button class="mode" id="m1Btn" type="button"><b>1v1</b><small>En mot en</small></button>
           <button class="mode" id="rangeBtn" type="button"><b>Skjutbana</b><small>Träna siktet på mål</small></button>
+          <button class="mode" id="queueBtn" type="button" hidden style="display:none"><b id="queueLbl">Sök match</b><small>Ditt party mot ett annat party</small></button>
+          <button class="mode" id="trainBtn" type="button" hidden style="display:none"><b>Bottar</b><small>Mot fem bottar · ger pengar</small></button>
         </div>
-        <div class="setRow"><span class="lbl">Karta</span><div class="seg" id="mapSeg"></div><span class="small">Gäller bara matcher mot bottar</span></div>
+        <div class="setRow" hidden style="display:none"><span class="lbl">Karta</span><div class="seg" id="mapSeg"></div><span class="small">Gäller bara matcher mot bottar</span></div>
         <div class="card" id="partyCard">
           <div class="cardHead"><span class="lbl">Ditt party</span><span class="small" id="partyInfo"></span></div>
           <ul class="list" id="partyList"></ul>
           <div class="row wrap">
-            <button class="btn2" id="internBtn" type="button">Internmatch</button>
+            <button class="btn2" id="internBtn" type="button" hidden style="display:none">Internmatch</button>
             <button class="btn2" id="leavePartyBtn" type="button">Lämna party</button>
           </div>
           <div class="status" id="partyStatus"></div>
@@ -6603,7 +6610,7 @@ wireQuests();
 let saveChain=Promise.resolve();
 function saveProfile(){
   try{localStorage.setItem('ilp.profile.v3',JSON.stringify(profile));}catch(e){}
-  if(NET.on){const body={money:profile.money|0,owned:profile.owned.slice(0,200),guns:profile.guns.slice(0,20),primary:profile.primary,skinFor:profile.skinFor,sights:profile.sights.slice(0,20),sightFor:profile.sightFor,attOwned:profile.attOwned.slice(0,20),attFor:profile.attFor,range:profile.range,rangeBest:profile.rangeBest,packInv:profile.packInv,codes:profile.codes.slice(0,50),q:profile.q||null,lt:profile.lt||null,ev:profile.ev||null,sp:profile.sp||null,dr:profile.dr||null};
+  if(NET.on){const body={money:profile.money|0,owned:profile.owned.slice(0,200),guns:profile.guns.slice(0,20),primary:profile.primary,skinFor:profile.skinFor,sights:profile.sights.slice(0,20),sightFor:profile.sightFor,attOwned:profile.attOwned.slice(0,20),attFor:profile.attFor,range:profile.range,rangeBest:profile.rangeBest,packInv:profile.packInv,codes:profile.codes.slice(0,50),rk:profile.rk||null,q:profile.q||null,lt:profile.lt||null,ev:profile.ev||null,sp:profile.sp||null,dr:profile.dr||null};
     saveChain=saveChain.then(()=>NET.db.doc(privPath()).set(body)).catch(()=>{});}
 }
 function addMoney(n){if(!n)return 0;n=Math.round(n*.5);if(G.mode==='train')n=Math.round(n/2);profile.money=(profile.money|0)+n;if(NET.full)profile.offM=(profile.offM|0)+n;stats.earned+=n;saveProfile();return n;}
@@ -7122,7 +7129,7 @@ function updateRemote(r,pr,peer,dt){
   let tx=x,tz=z;{const v=Array.isArray(pr.v)?pr.v:null;if(v&&+pr.a===1&&profile.netPred!==false){const vx=clamp(+v[0]||0,-12,12),vz=clamp(+v[1]||0,-12,12),age=peer&&peer.updatedAt?clamp((Date.now()-peer.updatedAt)/1000,0,.25):0,lat=peer&&peer.lat!=null?peer.lat:((typeof pr.pg==='number'?clamp(pr.pg,0,400):90)+(NET.ping==null?90:NET.ping))/2000,h=Math.min(.16,age+lat*.6);tx=x+vx*h;tz=z+vz*h;}r.nx=tx;r.nz=tz;}if(Math.hypot(tx-r.x,tz-r.z)>4){r.x=tx;r.z=tz;}else{const k=Math.min(1,dt*20);r.x+=(tx-r.x)*k;r.z+=(tz-r.z)*k;}
   r.yaw+=angDiff(yaw,r.yaw)*Math.min(1,dt*16);r.eye=eye;r.pitch=pitch;soldierLamp(r,!!pr.tc&&+pr.a===1);{const fy=+pr.fy||0;r.fy=r.fy==null||Math.abs(fy-r.fy)>2?fy:r.fy+(fy-r.fy)*Math.min(1,dt*14);}
   r.r=pr.r|0;r.alive=r.r===G.rd?!!pr.a:(r.r<G.rd?true:!!pr.a);
-  r.cr=pr.c===1;r.pr=pr.c===2;r.sl=pr.c===3;r.ln=clamp(+pr.l||0,-1,1);r.hp=pr.hp|0;r.cl=pr.cl|0;r.k=pr.k|0;r.d=pr.d|0;r.pg=typeof pr.pg==='number'?pr.pg:null;
+  r.rk=+pr.rk||0;r.cr=pr.c===1;r.pr=pr.c===2;r.sl=pr.c===3;r.ln=clamp(+pr.l||0,-1,1);r.hp=pr.hp|0;r.cl=pr.cl|0;r.k=pr.k|0;r.d=pr.d|0;r.pg=typeof pr.pg==='number'?pr.pg:null;
   {const rl=+pr.rl||0;if(rl===-1){r.rlU=.3;r.rlL=true;}else{r.rlL=false;if(rl>0){if(!(r.rlU>0)||Math.abs(rl-r.rlU)>.15)r.rlU=rl;}else r.rlU=0;}}
   if(r.rlU>0&&!r.rlL&&r.alive){const u0=r.rlU;r.rlU=Math.min(.999,r.rlU+dt/((GUNS[r.wg]||GUNS.k9).reload*.9));
     if((u0<.18&&r.rlU>=.18)||(u0<.64&&r.rlU>=.64)){const s=spatial(r.x,1.2,r.z,18);if(s.v>.05)wsnd.mechAt(u0<.18?'mout':'seat',r.wg,s.v*.8,s.pan);}}
@@ -7165,7 +7172,7 @@ function updateRemote(r,pr,peer,dt){
 }
 function buildPresence(ng){
   const pr={u:NET.uid,n:profile.name,tm:P.team,p:[r2(P.x),r2(P.ys+P.eye),r2(P.z),r3(P.yaw+(P.recY||0)),r3(P.pitch+(P.recP||0))],fy:r2(P.ys),v:[r2(P.vx||0),r2(P.vz||0)],hp:Math.max(0,Math.round(P.hp)),a:P.alive?1:0,tc:P.torch?1:0,c:P.sl>0?3:P.prone?2:P.crouch?1:0,l:r2(P.lean),w:P.wi,wg:W[P.wi].id,sk:skinOf(W[P.wi].id),
-    rl:P.rl&&!P.rl.rack?(P.rl.loop?-1:Math.max(.01,r2(clamp(P.rl.t/P.rl.dur,0,1)))):0,s:NETS.shot,se:NETS.se,h:NETS.hits,ev:NETS.ev,nd:grenades.slice(0,4).map(g=>[r2(g.p.x),r2(g.p.y),r2(g.p.z)]),cl:P.cl|0,r:P.rd|0,dd:P.dd,k:P.k|0,d:P.d|0,pg:NET.ping,
+    rl:P.rl&&!P.rl.rack?(P.rl.loop?-1:Math.max(.01,r2(clamp(P.rl.t/P.rl.dur,0,1)))):0,s:NETS.shot,se:NETS.se,h:NETS.hits,ev:NETS.ev,nd:grenades.slice(0,4).map(g=>[r2(g.p.x),r2(g.p.y),r2(g.p.z)]),cl:P.cl|0,r:P.rd|0,dd:P.dd,k:P.k|0,d:P.d|0,pg:NET.ping,rk:rkP(),
     g:isHost&&!ng?packG():null};
   return pr;}
 function sendPresence(){if(!MATCH.r)return;const pr=buildPresence();MATCH.r.presence(pr).catch(()=>{});p2pSend(pr);}
@@ -7201,9 +7208,10 @@ function hostTick(dt){
   const A=actors();
   const hasA=A.some(a=>a.team==='A'),hasB=A.some(a=>a.team==='B');
   if(G.ph==='wait'){G.wait+=dt;G.tl=0;
-    if(hasA&&hasB&&G.wait>4){G.ph='pick';G.map=pickMapId();G.tl=PICK_DUR;}
+    if(hasA&&hasB&&G.wait>4&&(G.mode!=='mp'||!MATCH.need||A.length>=MATCH.need*2||G.wait>25)){G.ph='pick';G.map=pickMapId();G.tl=PICK_DUR;}
     else if(G.wait>40){G.ph='over';G.win=hasA&&!hasB?'A':hasB&&!hasA?'B':null;G.why='Motståndarna dök aldrig upp.';}
     return;}
+  if(G.mode==='mp'){if(G.ph!=='over'&&(!hasA||!hasB)){G.gone=(G.gone||0)+dt;if(G.gone>3){G.ph='over';G.win=hasA?'A':'B';G.why='Motståndarna lämnade matchen.';if(G.win==='A')G.sa++;else G.sb++;return;}}else G.gone=0;}
   if(G.ph==='pick'){G.tl-=dt;if(G.tl<=0)newRound();return;}
   if(G.ph==='over')return;
   G.tl-=dt;
@@ -7315,19 +7323,22 @@ function onPhase(){
 }
 function showEnd(){
   const won=G.win===P.team,draw=!G.win;
-  $('endEyebrow').textContent=G.mode==='train'?'Träning är slut':'Matchen är slut';
+  $('endEyebrow').textContent=G.mode==='train'?'Träning är slut':G.mode==='mp'&&MATCH.md?modeName(MATCH.md)+L(' · matchen är slut',' · match over'):'Matchen är slut';
   const T=$('endTitle');T.className=won?'win':'lose';
   T.innerHTML=draw?'MATCHEN<br><span>AVBRUTEN</span>':won?'MATCHEN<br><span>VUNNEN</span>':'MATCHEN<br><span>FÖRLORAD</span>';
   $('endReason').textContent=G.why||'';
   $('stK').textContent=stats.kills;$('stD').textContent=stats.deaths;$('stH').textContent=stats.heads;
   $('stA').textContent=(stats.shots?Math.round(Math.min(1,stats.hits/stats.shots)*100):0)+'%';
   $('stS').textContent=G.sa+'–'+G.sb;$('earned').textContent='+'+stats.earned+' kr den här matchen';renderEndQuests();
+  {let el=$('endRank');if(!el){el=document.createElement('div');el.id='endRank';$('endReason').after(el);}el.hidden=true;
+   if(G.mode==='mp'&&MATCH.md==='r'&&!MATCH.rkDone&&G.rd>0){MATCH.rkDone=true;const d=rkDelta(won,draw),r=rkApply(d,won?'w':draw?'':'l');el.hidden=false;el.className=d>0?'up':d<0?'down':'';
+     el.innerHTML='<b>'+(d>0?'+':'')+d+' RP</b><span>'+rkName(r.p)+' · '+r.p+' RP'+(r.up?L(' · Ny division!',' · New division!'):r.down?L(' · Ner en division',' · Down a division'):'')+'</span>';}}
   $('hud').hidden=true;$('endScr').hidden=false;$('pause').hidden=true;vm.visible=false;torch.intensity=0;state='end';
   if(document.exitPointerLock&&document.pointerLockElement)document.exitPointerLock();
 }
-function startGame(mode,team){loadMap.__shown=0;
+function startGame(mode,team){loadMap.__shown=0;G.seenFull=false;G.gone=0;
   qMatchStart();
-  G.mode=mode;G.ph=mode==='train'?'wait':'wait';G.rd=0;G.sa=0;G.sb=0;G.tl=0;G.core={h:null,x:MW()/2,z:MD()/2,y:GLY};G.win=null;G.why='';G.ex=null;G.target=mode==='mp'?4:3;G.wait=mode==='train'?99:0;G.map=null;pickLast=-1;
+  G.mode=mode;G.ph=mode==='train'?'wait':'wait';G.rd=0;G.sa=0;G.sb=0;G.tl=0;G.core={h:null,x:MW()/2,z:MD()/2,y:GLY};G.win=null;G.why='';G.ex=null;G.target=mode==='mp'?(MATCH.md==='1'?5:4):3;G.wait=mode==='train'?99:0;G.map=null;pickLast=-1;
   lastPhKey='';lastRd=-1;isHost=mode==='train';resetStats();P.k=0;P.d=0;P.team=team;
   NETS.shot=0;NETS.se=null;NETS.hits=[];NETS.ev=[];
   if(MAP.range||!MAP.bots||!MAP.bots.length)loadMap(MAP_IDS[0]);
@@ -7336,12 +7347,13 @@ function startGame(mode,team){loadMap.__shown=0;
   initAudio();requestLock();
 }
 function quitGame(){
+  if(G.mode==='mp'&&MATCH.md==='r'&&!MATCH.rkDone&&G.rd>0&&G.ph!=='over'){MATCH.rkDone=true;rkApply(-20,'l');toast(L('Du lämnade en rankad match: −20 RP.','You left a ranked match: −20 RP.'));}
   if(G.mode==='mp')leaveMatch();
   clearRange();clearDrops();
   G.mode=null;G.ph='idle';clearRemotes();bots.forEach(b=>scene.remove(b.g));bots=[];clearNades();
   buildLevel();makeBlockMesh();clearEffects();
   if(document.exitPointerLock&&document.pointerLockElement)document.exitPointerLock();
-  showMenu();
+  showMenu();try{updatePick();}catch(e){}
 }
 
 /* ---------- nätverk: profil, namn, vänner, party, matchmaking ---------- */
@@ -7359,9 +7371,9 @@ async function netInit(){
   NET.on=true;
   // servern får aldrig låsa starten: svarar den inte på tio sekunder (full eller nere) spelar man mot bottar så länge
   const tmo=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))]);
-  try{await tmo(db.doc(privPath()).get(),10000);}catch(e){if(e&&e.message==='timeout'){NET.on=false;NET.full=true;NET.why=L('Servern svarar inte just nu (den kan vara full). Du kan spela mot bottar så länge. Ladda om sidan om en stund för att spela online.','The server isn\'t answering right now (it may be full). You can play bots meanwhile. Reload the page in a while to play online.');return;}}
+  try{await tmo(db.doc(privPath()).get(),10000);}catch(e){if(e&&e.message==='timeout'){NET.on=false;NET.full=true;NET.why=L('Servern svarar inte just nu (den kan vara full). Träna på skjutbanan så länge. Ladda om sidan om en stund för att spela online.','The server isn\'t answering right now (it may be full). Practise at the shooting range meanwhile. Reload the page in a while to play online.');return;}}
   try{const ps=await db.doc(privPath()).get();
-    if(ps.exists){const d=ps.data()||{};profile.money=Math.max(0,d.money|0);profile.owned=Array.isArray(d.owned)&&d.owned.length?d.owned.filter(x=>typeof x==='string').slice(0,200):['std'];if(!profile.owned.includes('std'))profile.owned.unshift('std');if(Array.isArray(d.guns))profile.guns=d.guns.filter(x=>GUNS[x]);if(GUNS[d.primary]&&!GUNS[d.primary].side)profile.primary=d.primary;if(d.skinFor&&typeof d.skinFor==='object')profile.skinFor=Object.assign({},d.skinFor);else if(d.skin)profile.skinFor={k9:d.skin,m2:d.skin};if(Array.isArray(d.sights))profile.sights=d.sights.filter(x=>typeof x==='string');if(d.sightFor&&typeof d.sightFor==='object')profile.sightFor=Object.assign({},d.sightFor);if(Array.isArray(d.attOwned))profile.attOwned=d.attOwned.filter(x=>typeof x==='string').slice(0,20);if(d.attFor&&typeof d.attFor==='object')profile.attFor=Object.assign({},d.attFor);if(d.range&&typeof d.range==='object')profile.range=Object.assign({},profile.range,d.range);if(d.rangeBest&&typeof d.rangeBest==='object'){if(!profile.rangeBest||typeof profile.rangeBest!=='object')profile.rangeBest={};for(const k in d.rangeBest)profile.rangeBest[k]=Math.max(profile.rangeBest[k]|0,d.rangeBest[k]|0);}if(Array.isArray(d.codes)){const cs=new Set((profile.codes||[]).concat(d.codes.filter(x=>typeof x==='string')));profile.codes=[...cs];}if(d.packInv&&typeof d.packInv==='object'&&!Array.isArray(d.packInv))profile.packInv=Object.assign({},d.packInv);for(const k of ['q','lt','ev','sp','dr'])if(d[k]&&typeof d[k]==='object'&&!Array.isArray(d[k]))profile[k]=JSON.parse(JSON.stringify(d[k]));if(profile.offM>0){profile.money+=profile.offM|0;}profile.offM=0;fixProfile();applySights();applyAtts();if(!profile.guns.includes(profile.primary))profile.primary='k9';applySkins();saveProfile();}
+    if(ps.exists){const d=ps.data()||{};profile.money=Math.max(0,d.money|0);profile.owned=Array.isArray(d.owned)&&d.owned.length?d.owned.filter(x=>typeof x==='string').slice(0,200):['std'];if(!profile.owned.includes('std'))profile.owned.unshift('std');if(Array.isArray(d.guns))profile.guns=d.guns.filter(x=>GUNS[x]);if(GUNS[d.primary]&&!GUNS[d.primary].side)profile.primary=d.primary;if(d.rk&&typeof d.rk==='object')profile.rk={p:Math.max(0,d.rk.p|0),w:Math.max(0,d.rk.w|0),l:Math.max(0,d.rk.l|0)};else profile.rk={p:0,w:0,l:0};if(d.skinFor&&typeof d.skinFor==='object')profile.skinFor=Object.assign({},d.skinFor);else if(d.skin)profile.skinFor={k9:d.skin,m2:d.skin};if(Array.isArray(d.sights))profile.sights=d.sights.filter(x=>typeof x==='string');if(d.sightFor&&typeof d.sightFor==='object')profile.sightFor=Object.assign({},d.sightFor);if(Array.isArray(d.attOwned))profile.attOwned=d.attOwned.filter(x=>typeof x==='string').slice(0,20);if(d.attFor&&typeof d.attFor==='object')profile.attFor=Object.assign({},d.attFor);if(d.range&&typeof d.range==='object')profile.range=Object.assign({},profile.range,d.range);if(d.rangeBest&&typeof d.rangeBest==='object'){if(!profile.rangeBest||typeof profile.rangeBest!=='object')profile.rangeBest={};for(const k in d.rangeBest)profile.rangeBest[k]=Math.max(profile.rangeBest[k]|0,d.rangeBest[k]|0);}if(Array.isArray(d.codes)){const cs=new Set((profile.codes||[]).concat(d.codes.filter(x=>typeof x==='string')));profile.codes=[...cs];}if(d.packInv&&typeof d.packInv==='object'&&!Array.isArray(d.packInv))profile.packInv=Object.assign({},d.packInv);for(const k of ['q','lt','ev','sp','dr'])if(d[k]&&typeof d[k]==='object'&&!Array.isArray(d[k]))profile[k]=JSON.parse(JSON.stringify(d[k]));if(profile.offM>0){profile.money+=profile.offM|0;}profile.offM=0;fixProfile();applySights();applyAtts();if(!profile.guns.includes(profile.primary))profile.primary='k9';applySkins();saveProfile();}
     else saveProfile();}catch(e){}
   try{const pl=await db.doc('players/'+NET.uid).get();if(pl.exists&&pl.data().name&&NAME_RE.test(pl.data().name))profile.name=pl.data().name;else profile.nameClaimed=false;}catch(e){}
   room.onPeers(ch=>{NET.lobby=ch.peers;const me=ch.peers.find(p=>p.sameTab);if(me)NET.peer=me.peer;onLobby();},()=>{});
@@ -7455,7 +7467,7 @@ function renderFriends(){
 }
 /* lobby-närvaro och inbjudningar */
 const LOB={p:null,s:'meny',inv:[],q:null};
-function setLobby(patch){Object.assign(LOB,patch);if(NET.room&&NET.on)NET.room.presence({u:NET.uid,n:profile.name||'',p:LOB.p,s:LOB.s,inv:LOB.inv,q:LOB.q}).catch(()=>{});}
+function setLobby(patch){Object.assign(LOB,patch);if(NET.room&&NET.on)NET.room.presence({u:NET.uid,n:profile.name||'',p:LOB.p,s:LOB.s,inv:LOB.inv,q:LOB.q,mg:LOB.mg||null}).catch(()=>{});}
 function invite(uid){const now=Date.now();LOB.inv=LOB.inv.filter(x=>now-x.i<90000&&x.to!==uid).slice(-4);LOB.inv.push({to:uid,p:PARTY.id,i:now});setLobby({});toast('Inbjudan skickad till '+fname(uid)+'.');}
 const seenInv=new Set();
 function onLobby(){
@@ -7481,7 +7493,7 @@ function toast(text){const t=document.createElement('div');t.className='toast';t
 for(const id of ['kronjuvel','serafim','astrolab','singularitet']){const s=SKINS.find(q=>q.id===id);if(s)s.myth=1;}
 const rarDisp=sk=>sk.myth?6:rarOf(sk);
 const SVG=(d,v)=>`<svg viewBox="${v||'0 0 24 24'}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
-const ICO={play:SVG('<path d="M8 5.5v13l10-6.5z" fill="currentColor" stroke="none"/>'),quests:SVG('<path d="M7 3h10v18l-5-3.5L7 21z"/><path d="M10 8h4M10 11.5h4"/>'),
+const ICO={rank:SVG('<path d="M4 18.5h16M5 16l-1.2-9 5 3.8L12 5l3.2 5.8 5-3.8L19 16z"/>'),m3:SVG('<circle cx="12" cy="8" r="2.6"/><circle cx="5.3" cy="10" r="2"/><circle cx="18.7" cy="10" r="2"/><path d="M7.6 19c0-2.6 2-4.6 4.4-4.6s4.4 2 4.4 4.6M2.4 18.4c0-2 1.3-3.5 2.9-3.5M21.6 18.4c0-2-1.3-3.5-2.9-3.5"/>'),m1:SVG('<path d="M4 4l9 9M4 4h4M4 4v4M20 4l-9 9M20 4h-4M20 4v4M7 17l-3 3M17 17l3 3M9.5 14.5l-3 3M14.5 14.5l3 3"/>'),play:SVG('<path d="M8 5.5v13l10-6.5z" fill="currentColor" stroke="none"/>'),quests:SVG('<path d="M7 3h10v18l-5-3.5L7 21z"/><path d="M10 8h4M10 11.5h4"/>'),
   friends:SVG('<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.2c2.3.2 3.9 1.8 4.4 4.3"/>'),
   shop:SVG('<path d="M4 8h16l-1.3 11.2a2 2 0 0 1-2 1.8H7.3a2 2 0 0 1-2-1.8z"/><path d="M8.5 8V6.5a3.5 3.5 0 0 1 7 0V8"/>'),keys:SVG('<rect x="3" y="7" width="18" height="11" rx="2.5"/><path d="M7 11h.01M11 11h.01M15 11h.01M8 14.5h8"/>'),
   bots:SVG('<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9.5 13h.01M14.5 13h.01M9.5 16.2h5"/>'),range:SVG('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor"/>'),
@@ -7489,7 +7501,7 @@ const ICO={play:SVG('<path d="M8 5.5v13l10-6.5z" fill="currentColor" stroke="non
   star:SVG('<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/>'),bolt:SVG('<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>'),check:SVG('<path d="M5 12.5l4.5 4.5L19 7.5"/>')};
 // flikar och spellägen får ikoner
 for(const b of $('tabs').children){const k=b.dataset.tab;if(ICO[k]&&!b.querySelector('svg'))b.insertAdjacentHTML('afterbegin',`<span class="tIco">${ICO[k]}</span>`);}
-[['queueBtn','play'],['trainBtn','bots'],['rangeBtn','range']].forEach(([id,k])=>{const b=$(id);if(b&&!b.querySelector('.mIco'))b.insertAdjacentHTML('afterbegin',`<span class="mIco">${ICO[k]}</span>`);});
+[['rankBtn','rank'],['m3Btn','m3'],['m1Btn','m1'],['rangeBtn','range']].forEach(([id,k])=>{const b=$(id);if(b&&!b.querySelector('.mIco'))b.insertAdjacentHTML('afterbegin',`<span class="mIco">${ICO[k]}</span>`);});
 // spelarprofil: nivå, erfarenhet till nästa nivå och statistik
 {const pc=document.createElement('div');pc.id='profCard';pc.className='profCard';$('tabs').before(pc);}
 function renderProfile(){const pc=$('profCard');if(!pc||typeof spLvl!=='function')return;const per=SEASON.per,xp=profile.sp?profile.sp.xp|0:0,lv=spLvl(),cur=xp-lv*per,max=lv>=SEASON.tiers.length;
@@ -7698,7 +7710,7 @@ async function joinParty(id){
     const r=await NET.room.join(id);PARTY.r=r;
     r.onPeers(ch=>{if(PARTY.r!==r)return;PARTY.peers=ch.peers;onParty();},()=>{});
     partyPresence();setLobby({p:id});renderParty();
-    setTimeout(()=>{if(PARTY.r===r&&partyMembers().length>5){toast('Partyt är fullt.');joinParty('p-'+rid6());}},2500);
+    setTimeout(()=>{if(PARTY.r===r&&partyMembers().length>3){toast('Partyt är fullt.');joinParty('p-'+rid6());}},2500);
     return true;
   }catch(e){toast('Kunde inte gå med i partyt.');PARTY.r=null;return false;}
   finally{PARTY.joining=false;}
@@ -7719,11 +7731,12 @@ function onParty(){
   const mem=partyMembers();
   for(const m of mem)if(!m.me)FR.names[m.u]=m.n;
   if(!isLeader()&&state==='menu'){const L=mem[0];const go=L&&L.go;
-    if(go&&typeof go.m==='string'&&go.m!==PARTY.lastGo&&/^m-[a-z0-9-]{1,40}$/.test(go.m))enterMatch(go.m,teamFor(go),typeof go.mp==='string'?go.mp:null);}
+    if(go&&typeof go.m==='string'&&go.m!==PARTY.lastGo&&/^m-[a-z0-9-]{1,40}$/.test(go.m))enterMatch(go.m,teamFor(go),typeof go.mp==='string'?go.mp:null,typeof go.md==='string'?go.md:null);}
   renderParty();if(state==='menu')renderFriends();
 }
 function pickTeams(mem){const t={};mem.forEach((m,i)=>{t[m.u]=PARTY.pick[m.u]||(i%2?'B':'A');});return t;}
-function renderParty(){
+function renderParty(){try{renderParty0();}finally{try{renderModes();modeStatus();}catch(e){}}}
+function renderParty0(){
   const list=$('partyList');list.textContent='';
   if(!NET.on){$('partyCard').hidden=true;const n=$('mpNote'),qb=$('queueBtn'),tb=$('trainBtn');n.hidden=false;
     if(isGuest()){qb.disabled=false;
@@ -7745,7 +7758,7 @@ function renderParty(){
       tb.title=lead?'Byt lag för internmatch':'Ledaren väljer lag';tb.onclick=()=>{PARTY.pick[m.u]=teams[m.u]==='A'?'B':'A';renderParty();};li.appendChild(tb);}
     list.appendChild(li);}
   {const on=new Set(NET.lobby.map(p=>p.presence&&p.presence.u).filter(u=>typeof u==='string')).size;
-   $('partyInfo').textContent=mem.length+' av 5 · bjud in vänner under Vänner'+(on>1?L(' · '+on+' spelare online',' · '+on+' players online'):'');}
+   $('partyInfo').textContent=mem.length+L(' av 3 · bjud in vänner under Vänner',' of 3 · invite friends under Friends')+(on>1?L(' · '+on+' spelare online',' · '+on+' players online'):'');}
   const qb=$('queueBtn'),ib=$('internBtn'),lb=$('leavePartyBtn');
   qb.disabled=!lead;ib.disabled=!lead||mem.length<2;lb.hidden=mem.length<2;
   $('queueLbl').textContent=LOB.q?'Avbryt sökning':'Sök match';lobbySync(mem);
@@ -7776,24 +7789,98 @@ const QBOT_MS=12000;
 // ingen ska fastna i en tom kö: är man ensam och ingen motståndare dyker upp på tolv sekunder blir det en bottmatch i stället
 function queueBots(){if(!LOB.q||!isLeader()||state!=='menu'||pend)return;const w=Date.now()-(+LOB.q.t||Date.now());
   if(partyMembers().length<=1&&w>QBOT_MS){setLobby({q:null});toast(L('Ingen motståndare online just nu. Du möter bottar så länge.','No opponent online right now. You\'re up against bots meanwhile.'));startGame('train','A');}}
-setInterval(()=>{if(state==='menu'){queueTick();queueBots();if(state==='menu'&&LOB.q)renderParty();}},500);
+setInterval(()=>{if(state==='menu'){modeTick();if(state==='menu'){if(LOB.q)renderParty();else renderModes();}}},500);
 const isGuest=()=>!NET.on&&!!(window.DOGLERS_FB&&window.DOGLERS_FB.login);
+for(const [id,m] of [['rankBtn','r'],['m3Btn','3'],['m1Btn','1']]){const b=$(id);if(b)b.addEventListener('click',()=>modeClick(m));}
 $('queueBtn').addEventListener('click',()=>{if(isGuest()){window.DOGLERS_FB.login('new');return;}if(!isLeader())return;if(LOB.q)setLobby({q:null});else setLobby({q:{p:PARTY.id,t:Date.now(),n:partyMembers().length}});renderParty();});
 $('internBtn').addEventListener('click',()=>{const mem=partyMembers();if(!isLeader()||mem.length<2)return;
   const t=pickTeams(mem);if(!Object.values(t).includes('A')||!Object.values(t).includes('B')){toast('Båda lagen behöver minst en spelare.');return;}
   const mid='m-'+PARTY.id.slice(2)+'-'+rid6().slice(0,4),mp=profile.mapPref||'rnd';setLobby({q:null});PARTY.go={m:mid,t,i:Date.now(),mp};partyPresence();enterMatch(mid,t[NET.uid]||'A',mp);});
 $('leavePartyBtn').addEventListener('click',()=>joinParty('p-'+rid6()));
+/* ---------- v46: tre lägen — Rank (3v3 med divisioner), 3v3 och 1v1, bara riktiga spelare ----------
+   Partyts ledare ställer sig i kön för ett läge. Alla ledare i lobbyn räknar fram samma matcher ur samma kö
+   (äldst först, lagen fylls till exakt 3 eller 1 med hela partyn), och går in när samma match legat stilla i 1,5 s. */
+const MODES={r:{need:3,sv:'Rank',en:'Rank'},'3':{need:3,sv:'3v3',en:'3v3'},'1':{need:1,sv:'1v1',en:'1v1'}};
+const RK_DIV=[['Brons','Bronze',0,'#d08b5b'],['Silver','Silver',400,'#cfd8e2'],['Guld','Gold',800,'#f2c14e'],['Platina','Platinum',1200,'#7fe3d2'],['Diamant','Diamond',1600,'#93c8ff']];
+function rkP(){return Math.max(0,(profile.rk&&+profile.rk.p)|0);}
+function rkDiv(p){let d=RK_DIV[0];for(const x of RK_DIV)if(p>=x[2])d=x;return d;}
+function rkName(p){const d=rkDiv(p);return L(d[0],d[1]);}
+function rkApply(d,res){const k=profile.rk&&typeof profile.rk==='object'?profile.rk:{p:0,w:0,l:0};const b=rkDiv(k.p|0)[2];
+  k.p=Math.max(0,(k.p|0)+d);if(res==='w')k.w=(k.w|0)+1;else if(res==='l')k.l=(k.l|0)+1;profile.rk=k;saveProfile();try{renderModes();}catch(e){}
+  return{p:k.p,up:rkDiv(k.p)[2]>b,down:rkDiv(k.p)[2]<b};}
+// vinst +25, förlust −20, justerat efter hur bra motståndarna var (max ±8)
+function rkDelta(won,draw){if(draw)return 0;const me=rkP(),opp=[...remotes.values()].filter(r=>r.team&&r.team!==P.team).map(r=>r.rk|0);
+  const oa=opp.length?opp.reduce((a,b)=>a+b,0)/opp.length:me,adj=clamp(Math.round((oa-me)/50),-8,8);return won?25+adj:Math.min(-5,-20+adj);}
+function modeName(m){const M=MODES[m];return M?L(M.sv,M.en):'';}
+// matcher ur kön: två lag med exakt `need` spelare var, hela partyn, äldst i kön först. I Rank får skillnaden i poäng växa ju längre den äldsta väntat.
+function qMatches(E,need,rank){const out=[];let left=E.slice();
+  outer:while(left.length){
+    for(let b=0;b<left.length;b++){const base=left[b],spread=rank?Math.min(4000,250+15*Math.max(0,(Date.now()-base.t)/1000)):1e9;
+      const cand=[base].concat(left.filter((e,i)=>i!==b&&Math.abs((e.r|0)-(base.r|0))<=spread)),used=new Set();
+      const pick=()=>{const res=[];const dfs=(k,s)=>{if(s===need)return true;for(let j=k;j<cand.length;j++){if(used.has(j))continue;const n=cand[j].n;if(s+n>need)continue;used.add(j);res.push(j);if(dfs(j+1,s+n))return true;used.delete(j);res.pop();}return false;};return dfs(0,0)?res:null;};
+      const A=pick();if(!A||A[0]!==0)continue;const B=pick();if(!B)continue;
+      const ga=A.map(i=>cand[i]),gb=B.map(i=>cand[i]);out.push({a:ga,b:gb});const ids=new Set(ga.concat(gb).map(e=>e.p));left=left.filter(e=>!ids.has(e.p));continue outer;}
+    break;}
+  return out;}
+let mPend=null,mPendT=0;
+function modeQueue(m){const M=MODES[m],E=[],seen=new Set();if(!M)return E;
+  for(const p of NET.lobby){const q=p.presence&&p.presence.q;if(!q||q.m!==m||typeof q.p!=='string'||seen.has(q.p))continue;const n=clamp(q.n|0,1,3);if(n>M.need)continue;seen.add(q.p);E.push({p:q.p,t:+q.t||0,n,r:+q.r||0});}
+  E.sort((a,b)=>a.t-b.t||a.p.localeCompare(b.p));return E;}
+// den som först räknat fram en match meddelar den i lobbyn; alla andra i den följer meddelandet (då spelar det ingen roll vem som var snabbast)
+function modeFollow(){const m=LOB.q.m;let best=null;
+  for(const p of NET.lobby){const g=p.presence&&p.presence.mg;if(!g||p.sameTab||g.md!==m||typeof g.m!=='string'||!/^m-[a-z0-9-]{1,40}$/.test(g.m)||!Array.isArray(g.a)||!Array.isArray(g.b))continue;
+    if(Date.now()-(+g.t||0)>20000)continue;const side=g.a.includes(PARTY.id)?'A':g.b.includes(PARTY.id)?'B':null;if(!side)continue;
+    if(!best||g.t<best.g.t||(g.t===best.g.t&&g.m<best.g.m))best={g,side};}
+  if(!best)return false;(window.__mlog||(window.__mlog=[])).push(['följer',best.g.m,best.side,Date.now()%100000]);mPend=null;setLobby({q:null});PARTY.go={m:best.g.m,side:best.side,i:Date.now(),md:m};partyPresence();sfx.cash&&sfx.cash();enterMatch(best.g.m,best.side,null,m);return true;}
+function modeTick(){
+  if(!LOB.q||!LOB.q.m||!isLeader()||state!=='menu')return;
+  const m=LOB.q.m,M=MODES[m];if(!M){setLobby({q:null});return;}
+  if(modeFollow())return;
+  const E=modeQueue(m);LOB.qCount=E.reduce((s,e)=>s+e.n,0);
+  const mine=qMatches(E,M.need,m==='r').find(g=>g.a.concat(g.b).some(e=>e.p===PARTY.id));
+  if(!mine){mPend=null;return;}
+  const key=m+':'+mine.a.map(e=>e.p).sort().join(',')+'|'+mine.b.map(e=>e.p).sort().join(',');
+  if(mPend!==key){mPend=key;mPendT=performance.now();return;}
+  if(performance.now()-mPendT<900)return;
+  mPend=null;const mid='m-'+hash(key)+'-'+hash(key+'x').slice(0,4),side=mine.a.some(e=>e.p===PARTY.id)?'A':'B';
+  const mg={m:mid,md:m,a:mine.a.map(e=>e.p),b:mine.b.map(e=>e.p),t:Date.now()};(window.__mlog||(window.__mlog=[])).push(['bestämmer',mid,side,JSON.stringify(mg.a)+'|'+JSON.stringify(mg.b),Date.now()%100000]);
+  setLobby({q:null,mg});setTimeout(()=>{if(LOB.mg===mg)setLobby({mg:null});},20000);
+  PARTY.go={m:mid,side,i:Date.now(),md:m};partyPresence();sfx.cash&&sfx.cash();enterMatch(mid,side,null,m);
+}
+function modeClick(m){
+  if(isGuest()){window.DOGLERS_FB.login('new');return;}
+  if(!NET.on){toast(NET.why||L('Onlinespel är inte tillgängligt just nu.','Online play isn\'t available right now.'));return;}
+  if(!isLeader()){toast(L('Ledaren i partyt väljer läge.','The party leader picks the mode.'));return;}
+  const M=MODES[m],n=partyMembers().length;
+  if(LOB.q&&LOB.q.m===m){setLobby({q:null});renderParty();return;}
+  if(n>M.need){toast(m==='1'?L('1v1 spelar man ensam. Lämna partyt först.','1v1 is played solo. Leave the party first.'):L('Max tre spelare i ett lag. Ditt party är för stort.','Max three players per team. Your party is too big.'));return;}
+  setLobby({q:{p:PARTY.id,t:Date.now(),n,m,r:rkP()}});sfx.click&&sfx.click();renderParty();
+}
+const qClock=()=>{const s=Math.max(0,Math.floor((Date.now()-((LOB.q&&LOB.q.t)||Date.now()))/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
+function renderModes(){
+  const on=NET.on,g=isGuest(),q=LOB.q&&LOB.q.m,p=rkP();
+  const sub={r:on?L('3v3 rankad · ','Ranked 3v3 · ')+rkName(p)+' '+p+' RP':L('3v3 rankad · Brons till Diamant','Ranked 3v3 · Bronze to Diamond'),
+    '3':L('Lag mot lag · ta med två vänner','Team vs team · bring two friends'),'1':L('En mot en','One on one')};
+  for(const [id,m] of [['rankBtn','r'],['m3Btn','3'],['m1Btn','1']]){const b=$(id);if(!b)continue;const s=b.querySelector('small');
+    b.classList.toggle('q',q===m);b.disabled=!!NET.full;
+    if(s)s.textContent=q===m?L('Söker… ','Searching… ')+qClock()+' · '+(LOB.qCount||1)+L(' i kön · klicka för att avbryta',' in queue · click to cancel'):g?L('Kräver konto · ','Needs an account · ')+sub[m]:sub[m];}
+  const rb=$('rankBtn');if(rb){const d=rkDiv(p);rb.style.setProperty('--rk',d[3]);}
+}
+
+function modeStatus(){const st=$('partyStatus');if(!st||!NET.on)return;const mem=partyMembers(),lead=isLeader();
+  if(LOB.q&&LOB.q.m){const m=LOB.q.m;st.textContent=L('Söker ','Searching ')+modeName(m)+'… '+qClock()+' · '+(LOB.qCount||mem.length)+L(' spelare i kön. Bara riktiga spelare, så det kan ta en stund när få är online.',' players in queue. Real players only, so it can take a while when few are online.');}
+  else st.textContent=lead?(mem.length<2?L('Välj Rank, 3v3 eller 1v1. Bjud in upp till två vänner under Vänner för att spela i samma lag.','Pick Rank, 3v3 or 1v1. Invite up to two friends under Friends to play on the same team.'):L('Ni spelar i samma lag. Välj Rank eller 3v3.','You\'ll play on the same team. Pick Rank or 3v3.')):L('Väntar på att ledaren väljer läge.','Waiting for the leader to pick a mode.');}
 /* match-rum */
 const MATCH={r:null,id:null,pref:null};
-async function enterMatch(mid,team,mp){
-  if(MATCH.r||!NET.on)return;PARTY.lastGo=mid;MATCH.pref=typeof mp==='string'?mp:null;
+async function enterMatch(mid,team,mp,md){
+  if(MATCH.r||!NET.on)return;PARTY.lastGo=mid;MATCH.pref=typeof mp==='string'?mp:null;MATCH.md=MODES[md]?md:null;MATCH.need=MATCH.md?MODES[MATCH.md].need:0;MATCH.rkDone=false;
   let r;try{r=await NET.room.join(mid);}catch(e){toast('Kunde inte ansluta till matchen.');return;}
   MATCH.r=r;MATCH.id=mid;setLobby({s:'match'});p2pAttach(r);
   startGame('mp',team);
 }
 function leaveMatch(){
   p2pDetach();if(MATCH.r){const r=MATCH.r;MATCH.r=null;r.leave().catch(()=>{});}
-  MATCH.id=null;MATCH.pref=null;clearRemotes();setLobby({s:'meny'});
+  MATCH.id=null;MATCH.pref=null;MATCH.md=null;MATCH.need=0;clearRemotes();setLobby({s:'meny'});
   if(PARTY.go&&isLeader()){PARTY.go=null;partyPresence();}
 }
 function netFrame(dt){
@@ -8254,7 +8341,7 @@ async function audioProbe(fn,sec){const save=[AC,master,noiseBuf,revS,revL];cons
   AC=off;master=off.createGain();master.gain.value=.5;master.connect(off.destination);noiseBuf=off.createBuffer(1,off.sampleRate*1.5|0,off.sampleRate);{const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}revS=revL=null;
   try{fn();const buf=await off.startRendering();let pk=0,ss=0,first=-1;const L=buf.getChannelData(0);for(let i=0;i<L.length;i++){const v=Math.abs(L[i]);if(v>pk)pk=v;ss+=v*v;if(first<0&&v>.01)first=i;}return{peak:+pk.toFixed(3),rms:+Math.sqrt(ss/L.length).toFixed(4),start:+(first/44100).toFixed(3)};}
   finally{[AC,master,noiseBuf,revS,revL]=save;}}
-if(/[?&]ilpdebug/.test(location.search))window.__ilp={get LSTAB(){return LSTAB;},warmKey,get crWarmed(){return crWarm.done;},get FZ(){return FZ;},get WX(){return WX;},wxApply:()=>wxApply(),skyMat,sun,get hemi(){return hemi;},get NET(){return NET;},get LOB(){return LOB;},get PARTY(){return PARTY;},queueBots:()=>queueBots(),setLobby:o=>setLobby(o),isGuest:()=>isGuest(),renderParty:()=>renderParty(),get WARM(){return WARM;},get BB(){return BB;},bb:t=>bb(t),fzErr:(e,a)=>fzErr(e,a),get AUTOQ(){return AUTOQ;},autoQ:f=>autoQ(f),fzText:()=>fzText(),fzNote:g=>fzNote(g),setPerf:v=>setPerf(v),get HB(){return HB;},landDust:(...a)=>landDust(...a),soldierFx:(...a)=>soldierFx(...a),nearMiss:(...a)=>nearMiss(...a),get nmN(){return nmN;},get MAPo(){return MAP;},enterMatch:(a,b,c)=>enterMatch(a,b,c),leaveMatch:()=>leaveMatch(),hurtPlayer:(...a)=>hurtPlayer(...a),buildLevel:()=>buildLevel(),makeBlockMesh:()=>makeBlockMesh(),onRoundStart:()=>onRoundStart(),resetBots:()=>resetBots(),get bMesh(){return bMesh;},get stats(){return stats;},spawnPlayer:()=>spawnPlayer(),clearEffects:()=>clearEffects(),castRay:(...a)=>castRay(...a),rayTarget:(...a)=>rayTarget(...a),audioProbe,wsnd,set locked(v){locked=v;},get dynScale(){return dynScale;},rollSkin,PACKS,SKINS,addMoney,ML,get paused(){return paused;},set paused(v){paused=v;},RIG,CL,VMS,RC,anchors,clipTargets,startReload,cancelReload,switchW,startRack,updateViewModel,updateWeapons,get armL(){return armL;},POTTY_STRAPS,POTTY_BACK,setLang,get LANG(){return LANG;},gunModels,vm,hands,hand2,sfx,BMAT,envTex,goldMat,scene,THREE,loadMap,MAPS,get curMap(){return curMap;},get bots(){return bots;},get rangeT(){return rangeT;},RANGE,BOARD,startChallenge,rangeReset,setRangeMode,setRangeInf,setRangeDist,setRangeDiff,silPart,rayRT,castRay,enemyTargets,updateRange,renderRangeSet,get T(){return T;},collides,los,railCol,RECOIL,get grass(){return grass;},applyAtts,applySkins,OPTM,ATT_SKINS,NOVA,NKIT,KD,novaKits,npSpawn,novaRl,novaFinish,novaInspect,SKFX_S,SKFX_T,normalTex,addRelief,skinTex,renderArsenal,ARS,OPTI,SCOMPAT,optOverlay,aimFovOf,sightOf,openPreview,closePreview,PV,LSHOW,shopOffers,shopLimited,rarDisp,confirm2,slideStart,slideEnd,nv2Chassis,NV2L,NVHC,partMats,kjDraw,COLL,KILLFX,killFx,killFxSkin,killBanner,KFX,WP,kfxUpdate,FLASHT,collFlash,skinTracer,drawEmblem,NSFX,NPS,qEvent,qEnsure,QM,QDAY,QWEEK,QCH,QEVT,SEASON,QBY,renderQuests,claimQ,claimCh,claimEv,claimTier,claimAllTiers,rerollQ,qClaimable,spLvl,onMyKill,hurtBot,switchTab,showEnd,redeemCode,codeHash,packInvOf,givePacks,openPack,renderPacks,handR,hand2,HANDR,HAND2,HPOSE,HFIT2,HFITR,H2Y,HG,FING,placeRig,rigFit,fitHands,poseHands,blendPose,applyHand,poseArr,IMPK,impK,impact,decMesh,decOwn,streaks,TORCH_I,torch,skyMat,INDOOR,get MAPL(){return MAPL;},get LPOOL(){return LPOOL;},pickMapId,renderMapSeg,MATCH,btype,idx,c0,buildSoldier,animSoldier,LOBBY,draw,setupPost,applyShadows,get postQ(){return postQ;},batchStatic,get state(){return state;},renderer,profile,renderShop,GUNS,get W(){return W;},G,P,remotes,NET,PARTY,MATCH,LOB,FR,camera,get isHost(){return isHost;},fire,hurtPlayer,actors,buildCritter,animCritter,charStyle,swapChars,get CRIT_COATS(){return CRIT_COATS;},get CRIT_CR(){return CRIT_CR;},get CRIT2(){return CRIT2;},TORCHU,WETU,torchTick,applyWet,get BEAM(){return BEAM;},get TDUST(){return TDUST;},get tBounce(){return tBounce;},get TL(){return TL;},SPAWN,get P2P(){return P2P;},p2pAttach,p2pDetach,p2pTick,p2pSend,p2pState,effPing,buildPresence,get AUTOQ(){return AUTOQ;},updateRemote,makeRemote,FOGU,applyAtmo,pcssK,get BIRDS(){return BIRDS;},birdsTick,swayMat,openSettings,closeSettings,get SO(){return SO;},gxo,gxSet,postCfg,get GXC(){return GXC;},get composer(){return composer;},get FXK(){return FXK;},kbBuild,get KBA(){return KBA;},get KBM(){return KBM;},padTick,get PAD(){return PAD;},syncSet,setPane,applyUI,applyTexQ,get TQ(){return TQ;},texAni,schedFrame,dmgNum,get DN(){return DN;},baseFov,get musicBus(){return musicBus;},get mainOut(){return mainOut;},sun,torch,get bloomPass(){return bloomPass;},get ssaoPass(){return ssaoPass;},get smaaPass(){return smaaPass;},get fxaaPass(){return fxaaPass;},get gradePass(){return gradePass;},applyPost,shadowsOnly,setLightPool,get isFull(){return isFull;},get keys(){return keys;},qEv:(e,d)=>qEvent(e,d),rollW:P0=>rollSkin(P0),rqW:()=>renderQuests(),get DRN(){return DRN;},droneInspect,droneUpdate,get QDR(){return QDR;},claimDr,claimDrBonus,drTick,gunBoxL,renderQuests,qEvent,COLL,OPT,pistolHouse,get debrisMesh(){return scene.children.find(o=>o.isInstancedMesh&&o.count===900);},applySights,CRK,crkMesh,bhp,cellCenter,breakFx,glassWeb,crackAt,debris,HP,DESTR,smokes,get shake(){return shake;}};
+if(/[?&]ilpdebug/.test(location.search))window.__ilp={quitGame:()=>quitGame(),MODES,qMatches,modeQueue,modeTick,modeClick,rkP,rkDiv,rkApply,rkDelta,get MATCH(){return MATCH;},get LOBq(){return LOB.q;},get LSTAB(){return LSTAB;},warmKey,get crWarmed(){return crWarm.done;},get FZ(){return FZ;},get WX(){return WX;},wxApply:()=>wxApply(),skyMat,sun,get hemi(){return hemi;},get NET(){return NET;},get LOB(){return LOB;},get PARTY(){return PARTY;},queueBots:()=>queueBots(),setLobby:o=>setLobby(o),isGuest:()=>isGuest(),renderParty:()=>renderParty(),get WARM(){return WARM;},get BB(){return BB;},bb:t=>bb(t),fzErr:(e,a)=>fzErr(e,a),get AUTOQ(){return AUTOQ;},autoQ:f=>autoQ(f),fzText:()=>fzText(),fzNote:g=>fzNote(g),setPerf:v=>setPerf(v),get HB(){return HB;},landDust:(...a)=>landDust(...a),soldierFx:(...a)=>soldierFx(...a),nearMiss:(...a)=>nearMiss(...a),get nmN(){return nmN;},get MAPo(){return MAP;},enterMatch:(a,b,c)=>enterMatch(a,b,c),leaveMatch:()=>leaveMatch(),hurtPlayer:(...a)=>hurtPlayer(...a),buildLevel:()=>buildLevel(),makeBlockMesh:()=>makeBlockMesh(),onRoundStart:()=>onRoundStart(),resetBots:()=>resetBots(),get bMesh(){return bMesh;},get stats(){return stats;},spawnPlayer:()=>spawnPlayer(),clearEffects:()=>clearEffects(),castRay:(...a)=>castRay(...a),rayTarget:(...a)=>rayTarget(...a),audioProbe,wsnd,set locked(v){locked=v;},get dynScale(){return dynScale;},rollSkin,PACKS,SKINS,addMoney,ML,get paused(){return paused;},set paused(v){paused=v;},RIG,CL,VMS,RC,anchors,clipTargets,startReload,cancelReload,switchW,startRack,updateViewModel,updateWeapons,get armL(){return armL;},POTTY_STRAPS,POTTY_BACK,setLang,get LANG(){return LANG;},gunModels,vm,hands,hand2,sfx,BMAT,envTex,goldMat,scene,THREE,loadMap,MAPS,get curMap(){return curMap;},get bots(){return bots;},get rangeT(){return rangeT;},RANGE,BOARD,startChallenge,rangeReset,setRangeMode,setRangeInf,setRangeDist,setRangeDiff,silPart,rayRT,castRay,enemyTargets,updateRange,renderRangeSet,get T(){return T;},collides,los,railCol,RECOIL,get grass(){return grass;},applyAtts,applySkins,OPTM,ATT_SKINS,NOVA,NKIT,KD,novaKits,npSpawn,novaRl,novaFinish,novaInspect,SKFX_S,SKFX_T,normalTex,addRelief,skinTex,renderArsenal,ARS,OPTI,SCOMPAT,optOverlay,aimFovOf,sightOf,openPreview,closePreview,PV,LSHOW,shopOffers,shopLimited,rarDisp,confirm2,slideStart,slideEnd,nv2Chassis,NV2L,NVHC,partMats,kjDraw,COLL,KILLFX,killFx,killFxSkin,killBanner,KFX,WP,kfxUpdate,FLASHT,collFlash,skinTracer,drawEmblem,NSFX,NPS,qEvent,qEnsure,QM,QDAY,QWEEK,QCH,QEVT,SEASON,QBY,renderQuests,claimQ,claimCh,claimEv,claimTier,claimAllTiers,rerollQ,qClaimable,spLvl,onMyKill,hurtBot,switchTab,showEnd,redeemCode,codeHash,packInvOf,givePacks,openPack,renderPacks,handR,hand2,HANDR,HAND2,HPOSE,HFIT2,HFITR,H2Y,HG,FING,placeRig,rigFit,fitHands,poseHands,blendPose,applyHand,poseArr,IMPK,impK,impact,decMesh,decOwn,streaks,TORCH_I,torch,skyMat,INDOOR,get MAPL(){return MAPL;},get LPOOL(){return LPOOL;},pickMapId,renderMapSeg,MATCH,btype,idx,c0,buildSoldier,animSoldier,LOBBY,draw,setupPost,applyShadows,get postQ(){return postQ;},batchStatic,get state(){return state;},renderer,profile,renderShop,GUNS,get W(){return W;},G,P,remotes,NET,PARTY,MATCH,LOB,FR,camera,get isHost(){return isHost;},fire,hurtPlayer,actors,buildCritter,animCritter,charStyle,swapChars,get CRIT_COATS(){return CRIT_COATS;},get CRIT_CR(){return CRIT_CR;},get CRIT2(){return CRIT2;},TORCHU,WETU,torchTick,applyWet,get BEAM(){return BEAM;},get TDUST(){return TDUST;},get tBounce(){return tBounce;},get TL(){return TL;},SPAWN,get P2P(){return P2P;},p2pAttach,p2pDetach,p2pTick,p2pSend,p2pState,effPing,buildPresence,get AUTOQ(){return AUTOQ;},updateRemote,makeRemote,FOGU,applyAtmo,pcssK,get BIRDS(){return BIRDS;},birdsTick,swayMat,openSettings,closeSettings,get SO(){return SO;},gxo,gxSet,postCfg,get GXC(){return GXC;},get composer(){return composer;},get FXK(){return FXK;},kbBuild,get KBA(){return KBA;},get KBM(){return KBM;},padTick,get PAD(){return PAD;},syncSet,setPane,applyUI,applyTexQ,get TQ(){return TQ;},texAni,schedFrame,dmgNum,get DN(){return DN;},baseFov,get musicBus(){return musicBus;},get mainOut(){return mainOut;},sun,torch,get bloomPass(){return bloomPass;},get ssaoPass(){return ssaoPass;},get smaaPass(){return smaaPass;},get fxaaPass(){return fxaaPass;},get gradePass(){return gradePass;},applyPost,shadowsOnly,setLightPool,get isFull(){return isFull;},get keys(){return keys;},qEv:(e,d)=>qEvent(e,d),rollW:P0=>rollSkin(P0),rqW:()=>renderQuests(),get DRN(){return DRN;},droneInspect,droneUpdate,get QDR(){return QDR;},claimDr,claimDrBonus,drTick,gunBoxL,renderQuests,qEvent,COLL,OPT,pistolHouse,get debrisMesh(){return scene.children.find(o=>o.isInstancedMesh&&o.count===900);},applySights,CRK,crkMesh,bhp,cellCenter,breakFx,glassWeb,crackAt,debris,HP,DESTR,smokes,get shake(){return shake;}};
 $('mbTog').addEventListener('change',e=>{profile.mblur=e.target.checked;saveProfile();});
 $('shpTog').addEventListener('change',e=>{profile.sharp=e.target.checked;saveProfile();});
 $('shkTog').addEventListener('change',e=>{profile.camShake=e.target.checked;saveProfile();});
@@ -8273,7 +8360,7 @@ if(!profile.gfxAuto){profile.gfxAuto=1;try{const gl=renderer.getContext(),dbg=gl
 if(profile.langV!==1){profile.lang='en';profile.langV=1;try{saveProfile();}catch(e){}}
 let LANG=profile.lang==='sv'?'sv':'en';
 const GT='GT (Gold Toilet)',GTU='GT (GOLD TOILET)';
-const EN={'Väder':'Weather','Regn, snö, löv och sand som blåser · Effektkvalitet Medel och Hög':'Rain, snow, leaves and blowing sand · Effects quality Medium and High','Blixtar':'Lightning','Åskan på Slottet lyser upp himlen. Stäng av om du är känslig för blinkande ljus.':'The thunderstorm on The Castle lights up the sky. Turn off if you are sensitive to flashing lights.','Spela online':'Play online','Gratis konto · möt riktiga spelare':'Free account · play real players','Spela nu':'Play now','Match mot fem bottar · ger pengar':'Match against five bots · earns money','Skapa konto':'Create account','Logga in':'Sign in','Fryslogg':'Freeze log','Spelet antecknar varje frysning. Kopiera loggen och skicka den om spelet hackar.':'The game notes every freeze. Copy the log and send it if the game stutters.','Kopiera':'Copy','Töm':'Clear','Prestandaläge':'Performance mode','För svaga datorer: stänger av skuggor, effekter och gräs och sänker upplösningen. Ger högst FPS.':'For weak computers: turns off shadows, effects and grass and lowers the resolution. Highest FPS.','Följ Doglers på TikTok':'Follow Doglers on TikTok',
+const EN={'Rank':'Rank','3v3 rankad · Brons till Diamant':'Ranked 3v3 · Bronze to Diamond','Lag mot lag · ta med två vänner':'Team vs team · bring two friends','En mot en':'One on one','Väder':'Weather','Regn, snö, löv och sand som blåser · Effektkvalitet Medel och Hög':'Rain, snow, leaves and blowing sand · Effects quality Medium and High','Blixtar':'Lightning','Åskan på Slottet lyser upp himlen. Stäng av om du är känslig för blinkande ljus.':'The thunderstorm on The Castle lights up the sky. Turn off if you are sensitive to flashing lights.','Spela online':'Play online','Gratis konto · möt riktiga spelare':'Free account · play real players','Spela nu':'Play now','Match mot fem bottar · ger pengar':'Match against five bots · earns money','Skapa konto':'Create account','Logga in':'Sign in','Fryslogg':'Freeze log','Spelet antecknar varje frysning. Kopiera loggen och skicka den om spelet hackar.':'The game notes every freeze. Copy the log and send it if the game stutters.','Kopiera':'Copy','Töm':'Clear','Prestandaläge':'Performance mode','För svaga datorer: stänger av skuggor, effekter och gräs och sänker upplösningen. Ger högst FPS.':'For weak computers: turns off shadows, effects and grass and lowers the resolution. Highest FPS.','Följ Doglers på TikTok':'Follow Doglers on TikTok',
  'Uppdrag':'Quests',
  'Gubbar':'Characters','Utseende':'Look','Taxen':'Dachshund','Soldater':'Soldiers','Klassiska soldater':'Classic soldiers','Taxen eller de klassiska soldaterna. Lobbyn byts direkt, matcher från nästa match':'The Dachshund or the classic soldiers. The lobby changes right away, matches from the next match',
  'Våta ytor':'Wet surfaces','Pölar och blanka, fuktiga golv på Slottet och i Hamnen':'Puddles and glossy damp floors at the Castle and the Harbour','Ficklampa':'Flashlight','Nattfärg':'Night colour','I svagt ljus drar färgerna åt kallt blått som i månsken, facklor och ficklampa behåller sin värme · Slottet':'In dim light colours shift towards cool moonlit blue, torches and the flashlight keep their warmth · the Castle','Ljuskägla i luften':'Light beam in the air','Strålen syns i dammig luft och mörker · Effektkvalitet Medel och Hög':'The beam shows in dusty air and darkness · Effects quality Medium and High','Damm i ljuset':'Dust in the light','Små korn som glittrar när de hamnar i strålen':'Tiny specks that glitter when they drift into the beam','Studsljus':'Bounce light','Ytan du lyser på sprider ljuset vidare ut i rummet':'The surface you light up spreads the light into the room','Mjuk följning':'Smooth follow','Ljuset släpar en aning efter när du vänder dig, som en riktig lampa i handen':'The light trails slightly when you turn, like a real hand-held light','Upplösning och mjukhet på skuggorna · ficklampan kastar skuggor från Medel · Ultra: mjuka kontaktskuggor':'Resolution and softness of shadows · the flashlight casts shadows from Medium · Ultra: soft contact shadows',
